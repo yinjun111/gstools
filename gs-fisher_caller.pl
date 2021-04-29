@@ -6,30 +6,20 @@ use Cwd qw(abs_path);
 use File::Basename qw(basename dirname);
 
 
-########
-#Prerequisites
-########
-
-my $r="/apps/R-3.4.1/bin/R";
-my $rscript="/apps/R-3.4.1/bin/Rscript";
-
-#Application version
-my $mergefiles="/apps/sbptools/mergefiles/mergefiles_caller.pl";
-my $text2excel="perl /apps/sbptools/text2excel/text2excel.pl";
-
-#dev version
-#my $mergefiles="perl /home/jyin/Projects/Pipeline/sbptools/mergefiles/mergefiles_caller.pl";
 
 ########
 #Interface
 ########
 
 
-my $version="0.4";
+my $version="0.5";
 
 #v0.2, add --type to accept different input types
 #v0.3, add excel output
 #v0.3a, add folder creation, solved failed tests issue
+#v0.41, AWS
+#v0.5, add --cate for directional changes
+
 
 my $usage="
 
@@ -42,10 +32,17 @@ Description: Perform fisher's exact test for select genes for a list of gene set
 
 Mandatory Parameters:
     --in|-i           Input file
+
     --type|-t         Input data type [list]
                           list, gene list in each column
                           matrix, significance matrix, e.g. from rnaseq-summary
-                          de, DE gene diff results from rnaseq-de (not implemented yet)					  
+                          de, DE gene diff results from rnaseq-de					  
+
+    --cate|-c         Category of changes, both or updown [both]
+                        this option works for --type matrix or --type de
+                        use both for list including both up and down
+                        use updown to generate lists for up and down separately
+
     --out|-o          Output folder
     --db|-d           Database file
     --backgroud|-b    Background file (optional)
@@ -81,6 +78,7 @@ my $bkfile;
 my $outfolder;
 
 my $type="list";
+my $cate="both"; #both for both up/down genes, updown will separate
 
 my $pmethod="fisher";
 my $qmethod="BH";
@@ -92,12 +90,14 @@ my $sortby="pvalue"; #pvalue, depth, name
 	
 my $verbose=1;
 my $runmode="none";
+my $dev=0; #developmental version
 
 GetOptions(
 	"input|i=s" => \$infile,
 	"db|d=s" => \$dbfile,
 	"type|t=s" => \$type,
 	#"pmethod=s"=>\$pmethod,
+	"cate|c=s" => \$cate,
 	"anno|a=s"=> \$annofile,
 	"qmethod=s"=>\$qmethod,
 	"qcutoff=f"=>\$qcutoff,
@@ -105,11 +105,44 @@ GetOptions(
 	"background|b=s"=>\$bkfile,
 	"sort=s"=> \$sortby,
 	"out|o=s"=>\$outfolder,
-	"verbose"=>\$verbose,	
+	"verbose"=>\$verbose,
+	"dev" => \$dev,	
 );
 
 
-print STDERR "\nsbptools gs-fisher $version running ...\n\n" if $verbose;
+
+########
+#Prerequisites
+########
+
+my $r="/apps/R-4.0.2/bin/R";
+my $rscript="/apps/R-4.0.2/bin/Rscript";
+
+#Application version
+
+
+my $omictoolsfolder="/apps/omictools/";
+
+#adding --dev switch for better development process
+if($dev) {
+	$omictoolsfolder="/home/centos/Pipeline/omictools/";
+#}
+#else {
+	#the tools called will be within the same folder of the script
+	#$omictoolsfolder=get_parent_folder(abs_path(dirname($0)));
+}
+
+my $mergefiles="$omictoolsfolder/mergefiles/mergefiles_caller.pl";
+my $text2excel="perl $omictoolsfolder/text2excel/text2excel.pl";
+
+
+
+########
+#Program running
+########
+
+
+print STDERR "\nomictools gs-fisher $version running ...\n\n" if $verbose;
 
 #mkdir if the dir doesn't exist
 #my $outfiledirname  = dirname($outfile);
@@ -143,7 +176,7 @@ print LOG "Current version: $version\n\n";
 print LOG "\n";
 
 
-print LOG "\nsbptools gs-fisher $version running ...\n\n";
+print LOG "\nomictools gs-fisher $version running ...\n\n";
 
 
 
@@ -156,6 +189,10 @@ print LOG "\nsbptools gs-fisher $version running ...\n\n";
 my $filefolder="temp";
 
 my $rand=randstring();
+
+
+#read cate assignment
+my %cates=map {$_,1} split(",",$cate);
 
 
 my %selgenes;
@@ -272,6 +309,7 @@ open(IN,$infile) || die "ERROR:Can't read $infile.$!\n";
 
 if($type eq "list") {
 
+	#
 	my @contents=<IN>;
 	my $title=shift @contents;
 	$title=~tr/\r\n//d;
@@ -305,9 +343,19 @@ elsif($type eq "matrix") {
 		}
 		else {
 			for(my $num=1;$num<@array;$num++) {
-				#use both for now #non-0
 				if(defined $array[$num] && length($array[$num])>0 && $array[$num] ne "NA" && $array[$num] ne " " && $array[$num] ne "0") {
-					$selgenes{$comparison_names[$num-1]}{$array[0]}++;
+					if(defined $cates{"both"}) {
+						$selgenes{$comparison_names[$num-1]}{$array[0]}++;
+					}
+					
+					if(defined $cates{"updown"}) {
+						if($array[$num]==1) {
+							$selgenes{$comparison_names[$num-1]."-up"}{$array[0]}++;
+						}
+						elsif($array[$num]==-1) {
+							$selgenes{$comparison_names[$num-1]."-down"}{$array[0]}++;
+						}
+					}
 				}
 			}
 		}
@@ -338,9 +386,20 @@ elsif($type eq "de") {
 		else {
 			my $num=5;
 			#use both for now #non-0
-			if(defined $array[$num] && length($array[$num])>0 && $array[$num] ne "NA" && $array[$num] ne " " && $array[$num] ne "0") {
-				$selgenes{$comparison_names[0]}{$array[0]}++;
+			if(defined $cates{"both"}) {
+				if(defined $array[$num] && length($array[$num])>0 && $array[$num] ne "NA" && $array[$num] ne " " && $array[$num] ne "0") {
+					$selgenes{$comparison_names[0]}{$array[0]}++;
+				}
 			}
+			
+			if(defined $cates{"updown"}) {
+				if($array[$num]==1) {
+					$selgenes{$comparison_names[$num-1]."-up"}{$array[0]}++;
+				}
+				elsif($array[$num]==-1) {
+					$selgenes{$comparison_names[$num-1]."-down"}{$array[0]}++;
+				}
+			}			
 		}
 		$ilinenum++;
 	}
@@ -349,10 +408,12 @@ elsif($type eq "de") {
 
 close IN;
 
-print STDERR "Sample list(s) ",join(",",@comparison_names)," are identified from $infile.\n\n" if $verbose;
-print LOG "Sample list(s) ",join(",",@comparison_names)," are identified from $infile.\n\n";
+my @final_comparison_names=sort keys %selgenes;
 
-foreach my $compname (@comparison_names) {
+print STDERR "Sample list(s) ",join(",",@final_comparison_names)," are identified from $infile.\n\n" if $verbose;
+print LOG "Sample list(s) ",join(",",@final_comparison_names)," are identified from $infile.\n\n";
+
+foreach my $compname (@final_comparison_names) {
 	print STDERR scalar(keys %{$selgenes{$compname}})," genes are identified from $compname.\n" if $verbose; 
 	print LOG scalar(keys %{$selgenes{$compname}})," genes are identified from $compname.\n";
 }
@@ -381,7 +442,7 @@ my $tempfile="$outfolder/$filefolder/gs-fisher_tem_$rand.txt";
 my @outfiles;
 my @outfilenames;
 	
-foreach my $exp_id (@comparison_names) {
+foreach my $exp_id (@final_comparison_names) {
 	open(TMP,">$tempfile") || die $!;
 	my %gs2gene_sel; 
 	my %changed_gene; #n
@@ -619,3 +680,63 @@ sub current_time {
 	my $now = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year+1900, $mon+1, $mday, $hour, $min, $sec);
 	return $now;
 }
+
+
+sub getsysoutput {
+	my $command=shift @_;
+	my $output=`$command`;
+	$output=~tr/\r\n//d;
+	return $output;
+}
+
+
+sub build_timestamp {
+	my ($now,$opt)=@_;
+	
+	if($opt eq "long") {
+		$now=~tr/ /_/;
+		$now=~tr/://d;
+	}
+	else {
+		$now=substr($now,0,10);
+	}
+	
+	return $now;
+}
+
+
+sub find_program {
+	my $fullprogram=shift @_;
+	
+	#use defined program as default, otherwise search for this program in PATH
+	
+	my $program;
+	if($fullprogram=~/([^\/]+)$/) {
+		$program=$1;
+	}
+	
+	if(-e $fullprogram) {
+		return $fullprogram;
+	}
+	else {
+		my $sysout=`$program`;
+		if($sysout) {
+			my $location=`which $program`;
+			return $location;
+		}
+		else {
+			print STDERR "ERROR:$fullprogram or $program not found in your system.\n\n";
+			exit;
+		}
+	}
+}
+
+
+sub get_parent_folder {
+	my $dir=shift @_;
+	
+	if($dir=~/^(.+\/)[^\/]+\/?/) {
+		return $1;
+	}
+}
+

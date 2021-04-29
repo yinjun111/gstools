@@ -1,0 +1,97 @@
+
+
+library("argparser",quietly =T)
+
+version="0.1"
+
+description=paste0("gs_dotplot\nversion ",version,"\n","Usage:\nDescription: Generate dot image two data matrixes\n")
+
+
+#####
+#Add arguments
+#####
+
+parser <- arg_parser(description=description)
+
+parser <- add_argument(parser, arg="--size",short="-s", type="character", help = " Input file for dot size, e.g. OR")
+parser <- add_argument(parser, arg="--sizename", type="character", help = " Input file for dot size, e.g. OR")
+parser <- add_argument(parser, arg="--color",short="-c", type="character", help = "Input file for dot color, e.g. p/q value matrix")
+parser <- add_argument(parser, arg="--colorname",type="character", help = "Input file for dot color, e.g. p/q value matrix")
+parser <- add_argument(parser, arg="--out",short="-o", type="character", help = "Output file, png format")
+
+args = parse_args(parser)
+
+print(args)
+
+
+
+######
+#Drawing function
+#####
+
+library(Cairo)
+#library(pheatmap)
+library(RColorBrewer)
+library(ggplot2)
+
+
+
+cols <- brewer.pal(9, "Reds")
+pal <- colorRampPalette(cols)
+topnum=30
+
+
+data.size<-read.table(args$"size",header=T,row.names=1,sep="\t",quote="",comment.char="")
+
+data.color<-read.table(args$"color",header=T,row.names=1,sep="\t",quote="",comment.char="")
+
+
+
+#conversion for size #or
+data.size[is.na(data.size)]<-0
+
+#conversion for color #p
+data.color[is.na(data.color)]<-1
+data.color[data.color==0] <- 1e-32
+data.color<- -log10(data.color)
+
+#top terms #by color
+topnum=min(topnum,nrow(data.color))
+
+#select by data color
+data.color.top<-data.color[order(apply(data.color,1,sum),decreasing = T)[1:topnum],]
+data.size.top<-data.size[order(apply(data.color,1,sum),decreasing = T)[1:topnum],]
+
+#df
+sizename<-make.names(args$sizename)
+colorname<-make.names(args$colorname)
+
+
+#data.df<-data.frame("Comparison"=factor(rep(colnames(data.color),each=topnum),levels=colnames(data.color)),
+#                  "Gene Set"=factor(rep(rownames(data.color.top),ncol(data.color.top)),levels=rev(rownames(data.color.top))),
+#                  sizename=as.numeric(unlist(data.size.top)),
+#                  colorname=as.numeric(unlist(data.color.top)))
+
+data.df<-data.frame(factor(rep(colnames(data.color),each=topnum),levels=colnames(data.color)),
+    factor(rep(rownames(data.color.top),ncol(data.color.top)),levels=rev(rownames(data.color.top))),
+	as.numeric(unlist(data.size.top)),
+	as.numeric(unlist(data.color.top)))
+
+colnames(data.df)<-c("Comparison","Gene Set", sizename, colorname)			  
+
+#figure output
+figure1<-args$out
+
+CairoPNG(file=figure1,res = 300,width = 4+ncol(data.color),height = 3+0.4*topnum,units = "in")
+
+#unclustered version
+ggplot(data.df, aes_string(x="Comparison", y="Gene Set", size=sizename, color=colorname)) + geom_point(alpha = 1)+theme_classic() +scale_color_gradient2(low = "blue",  mid="grey",high = "red", space = "Lab", limit = c(0, max(data.df[[colorname]])))+scale_size(range = c(0, 10))+ theme(axis.text.x = element_text(angle = 90,size = 10 ),axis.text.y = element_text(angle = 0,size = 10 ))
+
+dev.off()
+
+#clustered version
+figure2=sub(".png$","_clustered.png",figure1,perl=T)
+
+#CairoPNG(file=figure2,res = 300,width = 15,height = 10,units = "in")
+#gs_heatmap(data,cluster_cols = T,topnum = 30)
+#dev.off()

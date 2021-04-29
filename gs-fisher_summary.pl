@@ -18,23 +18,23 @@ use File::Basename qw(basename dirname);
 #my $rscript="/apps/R-3.4.1/bin/Rscript";
 
 #Application version
-my $mergefiles="/apps/sbptools/mergefiles/mergefiles_caller.pl";
-my $text2excel="perl /apps/sbptools/text2excel/text2excel.pl";
+my $mergefiles="/apps/omictools/mergefiles/mergefiles_caller.pl";
+my $text2excel="perl /apps/omictools/text2excel/text2excel.pl";
 
 #dev version
-#my $mergefiles="perl /home/jyin/Projects/Pipeline/sbptools/mergefiles/mergefiles_caller.pl";
+#my $mergefiles="perl /home/jyin/Projects/Pipeline/omictools/mergefiles/mergefiles_caller.pl";
 
 ########
 #Interface
 ########
 
 
-my $version="0.4";
+my $version="0.41";
 
 #v0.2, add --type to accept different input types
 #v0.3, add text2excel to merge outputs
 #v0.3a, add pvalue
-
+#v0.41, AWS HPC
 
 my $usage="
 
@@ -75,18 +75,50 @@ my $sigonly="T";
 
 my $verbose=1;
 my $runmode="none";
+my $dev=0; #developmental version
+
 
 GetOptions(
 	"in|i=s" => \$infolders,
 	"out|o=s"=>\$outfolder,
 	"sigonly|s=s"=>\$sigonly,
-	"verbose"=>\$verbose,	
+	"verbose"=>\$verbose,
+	"dev" => \$dev,		
 );
 
+########
+#Prerequisites
+########
+
+my $r="/apps/R-4.0.2/bin/R";
+my $rscript="/apps/R-4.0.2/bin/Rscript";
+
+#Application version
+
+
+my $omictoolsfolder="/apps/omictools/";
+
+#adding --dev switch for better development process
+if($dev) {
+	$omictoolsfolder="/home/centos/Pipeline/omictools/";
+#}
+#else {
+	#the tools called will be within the same folder of the script
+	#$omictoolsfolder=get_parent_folder(abs_path(dirname($0)));
+}
+
+my $mergefiles="$omictoolsfolder/mergefiles/mergefiles_caller.pl";
+my $text2excel="perl $omictoolsfolder/text2excel/text2excel.pl";
+
+
+
+########
+#Program running
+########
 
 #mkpath for recursive make dir
 
-print STDERR "\nsbptools gs-fisher $version running ...\n\n" if $verbose;
+print STDERR "\nomictools gs-fisher $version running ...\n\n" if $verbose;
 
 if(!-e $outfolder) {
 	print STDERR "$outfolder not found. mkdir $outfolder\n";
@@ -116,7 +148,7 @@ print LOG "Current version: $version\n\n";
 print LOG "\n";
 
 
-print LOG "\nsbptools gs-fisher $version running ...\n\n";
+print LOG "\nomictools gs-fisher $version running ...\n\n";
 
 
 
@@ -173,6 +205,8 @@ foreach my $infolder (split(",",$infolders)) {
 
 #2,3,5,6
 #number, gene, OR, bhp, 
+my @outfiles;
+
 my $outfile1=$outfile;
 $outfile1=~s/\.\w+$/_num.txt/;
 open(OUT1,">$outfile1") || die $!;
@@ -186,10 +220,12 @@ $outfile3=~s/\.\w+$/_or.txt/;
 open(OUT3,">$outfile3") || die $!;
 
 my $outfile4=$outfile;
+push @outfiles,$outfile4;
 $outfile4=~s/\.\w+$/_q.txt/;
 open(OUT4,">$outfile4") || die $!;
 
 my $outfile5=$outfile;
+push @outfiles,$outfile5;
 $outfile5=~s/\.\w+$/_p.txt/;
 open(OUT5,">$outfile5") || die $!;
 
@@ -248,6 +284,26 @@ system("$text2excel -i $outfile1,$outfile2,$outfile3,$outfile4,$outfile5 -n Numb
 
 
 close LOG;
+
+
+#draw heatmap and dotplots
+
+#Generate heatmap figures for p/q
+
+foreach my $outfile (@outfiles) {
+	my $outfilefig=$outfile;
+	$outfilefig=~s/.txt/_heatmap.png/;	
+
+	print STDERR "Generating heatmap for $outfile.\n";
+	print LOG "Generating heatmap for $outfile.\n";
+
+	system("$rscript $gs_heatmap -i $outfile -o $outfilefig");
+	print LOG "$rscript $gs_heatmap -i $outfile -o $outfilefig\n";
+	
+}
+
+#Generate dotplot for or+p and or+q
+
 
 ########
 #Function
