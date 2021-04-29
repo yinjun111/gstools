@@ -34,18 +34,12 @@ library(Cairo)
 library(RColorBrewer)
 library(ggplot2)
 
-
-
 cols <- brewer.pal(9, "Reds")
 pal <- colorRampPalette(cols)
 topnum=30
 
-
 data.size<-read.table(args$"size",header=T,row.names=1,sep="\t",quote="",comment.char="")
-
 data.color<-read.table(args$"color",header=T,row.names=1,sep="\t",quote="",comment.char="")
-
-
 
 #conversion for size #or
 data.size[is.na(data.size)]<-0
@@ -63,31 +57,35 @@ data.color.top<-data.color[order(apply(data.color,1,sum),decreasing = T)[1:topnu
 data.size.top<-data.size[order(apply(data.color,1,sum),decreasing = T)[1:topnum],]
 
 #df
-sizename<-make.names(args$sizename)
-colorname<-make.names(args$colorname)
+#sizename<-make.names(args$sizename)
+#colorname<-make.names(args$colorname)
+sizename<-args$sizename
+colorname<-args$colorname
 
+colorname.rev<- paste("`",colorname,"`",sep="")
 
-#data.df<-data.frame("Comparison"=factor(rep(colnames(data.color),each=topnum),levels=colnames(data.color)),
-#                  "Gene Set"=factor(rep(rownames(data.color.top),ncol(data.color.top)),levels=rev(rownames(data.color.top))),
-#                  sizename=as.numeric(unlist(data.size.top)),
-#                  colorname=as.numeric(unlist(data.color.top)))
-
+#create data frame
 data.df<-data.frame(factor(rep(colnames(data.color),each=topnum),levels=colnames(data.color)),
     factor(rep(rownames(data.color.top),ncol(data.color.top)),levels=rev(rownames(data.color.top))),
 	as.numeric(unlist(data.size.top)),
 	as.numeric(unlist(data.color.top)))
 
+#filter OR==0
+data.df<-data.df[data.df[,3]!=0,]
+
 colnames(data.df)<-c("Comparison","Gene Set", sizename, colorname)			  
 
 #figure output
+
+#unclustered version
 figure1<-args$out
 
 CairoPNG(file=figure1,res = 300,width = 4+ncol(data.color),height = 3+0.4*topnum,units = "in")
 
-#unclustered version
-ggplot(data.df, aes_string(x="Comparison", y="Gene Set", size=sizename, color=colorname)) + geom_point(alpha = 1)+theme_classic() +scale_color_gradient2(low = "blue",  mid="grey",high = "red", space = "Lab", limit = c(0, max(data.df[[colorname]])))+scale_size(range = c(0, 10))+ theme(axis.text.x = element_text(angle = 90,size = 10 ),axis.text.y = element_text(angle = 0,size = 10 ))
+ggplot(data.df, aes_string(x="Comparison", y="`Gene Set`" , size=sizename, color=colorname.rev)) + geom_point(alpha = 1)+theme_classic() +scale_color_gradient2(low = "blue",  mid="grey",high = "red", space = "Lab", limit = c(0, max(data.df[[colorname]])))+scale_size(range = c(0, 10))+ theme(axis.text.x = element_text(angle = 90,size = 10 ),axis.text.y = element_text(angle = 0,size = 10 ))
 
 dev.off()
+
 
 #clustered version
 figure2=sub(".png$","_clustered.png",figure1,perl=T)
