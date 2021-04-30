@@ -6,35 +6,14 @@ use Cwd qw(abs_path);
 use File::Basename qw(basename dirname);
 
 
-#get an input folder 
-
-
-
-########
-#Prerequisites
-########
-
-#my $r="/apps/R-3.4.1/bin/R";
-#my $rscript="/apps/R-3.4.1/bin/Rscript";
-
-#Application version
-my $mergefiles="/apps/omictools/mergefiles/mergefiles_caller.pl";
-my $text2excel="perl /apps/omictools/text2excel/text2excel.pl";
-
-#dev version
-#my $mergefiles="perl /home/jyin/Projects/Pipeline/omictools/mergefiles/mergefiles_caller.pl";
-
 ########
 #Interface
 ########
 
 
-my $version="0.41";
+my $version="0.1";
 
-#v0.2, add --type to accept different input types
-#v0.3, add text2excel to merge outputs
-#v0.3a, add pvalue
-#v0.41, AWS HPC
+#v0.1
 
 my $usage="
 
@@ -111,6 +90,21 @@ my $mergefiles="$omictoolsfolder/mergefiles/mergefiles_caller.pl";
 my $text2excel="perl $omictoolsfolder/text2excel/text2excel.pl";
 
 
+#gstools
+my $gstoolsfolder="/apps/gstools/";
+
+#adding --dev switch for better development process
+if($dev) {
+	$gstoolsfolder="/home/centos/Pipeline/gstools/";
+#}
+#else {
+	#the tools called will be within the same folder of the script
+	#$omictoolsfolder=get_parent_folder(abs_path(dirname($0)));
+}
+
+my $gs_heatmap="$gstoolsfolder/gs_heatmap.R";
+my $gs_dotplot="$gstoolsfolder/gs_dotplot.R";
+
 
 ########
 #Program running
@@ -147,10 +141,7 @@ print LOG "Current version: $version\n\n";
 
 print LOG "\n";
 
-
-print LOG "\nomictools gs-fisher $version running ...\n\n";
-
-
+print LOG "\nomictools gs-fisher_summary $version running ...\n\n";
 
 
 ########
@@ -220,13 +211,14 @@ $outfile3=~s/\.\w+$/_or.txt/;
 open(OUT3,">$outfile3") || die $!;
 
 my $outfile4=$outfile;
-push @outfiles,$outfile4;
 $outfile4=~s/\.\w+$/_q.txt/;
+push @outfiles,$outfile4;
 open(OUT4,">$outfile4") || die $!;
 
 my $outfile5=$outfile;
-push @outfiles,$outfile5;
 $outfile5=~s/\.\w+$/_p.txt/;
+push @outfiles,$outfile5;
+
 open(OUT5,">$outfile5") || die $!;
 
 print OUT1 "Gene set\t",join("\t",sort keys %files),"\n";
@@ -283,27 +275,40 @@ print LOG "Converting outputs to excel file:$exceloutfile.\n\n";
 system("$text2excel -i $outfile1,$outfile2,$outfile3,$outfile4,$outfile5 -n Number,Gene,OR,Q,P -o $exceloutfile --theme theme2");
 
 
-close LOG;
-
 
 #draw heatmap and dotplots
 
 #Generate heatmap figures for p/q
 
-foreach my $outfile (@outfiles) {
-	my $outfilefig=$outfile;
-	$outfilefig=~s/.txt/_heatmap.png/;	
+foreach my $outfile_sel (@outfiles) {
+	my $outfilefig=$outfile_sel;
+	$outfilefig=~s/\.\w+$/_heatmap.png/;	
 
-	print STDERR "Generating heatmap for $outfile.\n";
-	print LOG "Generating heatmap for $outfile.\n";
+	print STDERR "Generating heatmap for $outfile_sel.\n";
+	print LOG "Generating heatmap for $outfile_sel.\n";
 
-	system("$rscript $gs_heatmap -i $outfile -o $outfilefig");
-	print LOG "$rscript $gs_heatmap -i $outfile -o $outfilefig\n";
+	system("$rscript $gs_heatmap -i $outfile_sel -o $outfilefig");
+	print LOG "$rscript $gs_heatmap -i $outfile_sel -o $outfilefig\n";
 	
 }
 
 #Generate dotplot for or+p and or+q
+#OR+p
 
+my $outfiledpfig1=$outfile;
+$outfiledpfig1=~s/\.\w+$/_orbhp_dotplot.png/;
+	
+system("$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1");
+print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1\n";
+
+
+my $outfiledpfig2=$outfile;
+$outfiledpfig2=~s/\.\w+$/_orrawp_dotplot.png/;
+
+system("$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2");
+print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2\n";
+
+close LOG;
 
 ########
 #Function
