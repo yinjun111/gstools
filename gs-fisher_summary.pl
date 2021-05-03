@@ -28,6 +28,7 @@ Mandatory Parameters:
     --in|-i           Input folder(s)					  
     --out|-o          Output folder
     --sigonly|-s      Only significant results [T]	
+    --suffix|-x       Remove suffix from file names [_gs-fisher.txt]
     --top|-t          # of top terms to show in figures [20]	
     --verbose|-v      Verbose
 	
@@ -53,6 +54,7 @@ my $outfolder;
 
 my $sigonly="T";
 my $topnum=20;
+my $suffix="_gs-fisher.txt";
 
 my $verbose=1;
 my $runmode="none";
@@ -63,6 +65,7 @@ GetOptions(
 	"in|i=s" => \$infolders,
 	"out|o=s"=>\$outfolder,
 	"sigonly|s=s"=>\$sigonly,
+	"suffix|x=s"=>\$suffix,	
 	"top|t=s"=>\$topnum,	
 	"verbose"=>\$verbose,
 	"dev" => \$dev,		
@@ -163,6 +166,12 @@ foreach my $infolder (split(",",$infolders)) {
 			open(IN,$file) || die $!;
 			my $filename=basename($file);
 			
+			my $samplename=$filename;
+			
+			if(defined $suffix && length($suffix)>0) {
+				$samplename=~s/$suffix//;
+			}
+			
 			my $linenum=0;
 			while(<IN>) {
 				tr/\r\n//d;
@@ -170,13 +179,13 @@ foreach my $infolder (split(",",$infolders)) {
 					unless($_=~/^Gene set/) {
 						last;
 					}
-					$files{$filename}++;
+					$files{$samplename}++;
 					print STDERR $file," detected from gstools.\n";
 				}
 				else {
 					my @array=split/\t/;
 					
-					$file2gs{$filename}{$array[0]}=[@array];
+					$file2gs{$samplename}{$array[0]}=[@array];
 					
 					if($sigonly eq "T") {
 						#keeps only significant results
