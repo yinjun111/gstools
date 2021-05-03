@@ -189,8 +189,8 @@ while(<IN>) {
 	next if $_=~/^Database/;
 	my @array=split/\t/;
 	
-	if($array[4] eq "Y") {
-		$dbfiles{$array[2]}=$array[0];
+	if($array[5] eq "Y") {
+		$dbfiles{$array[3]}=$array[0];
 		print STDERR $array[0]," is used for gs-report.\n";
 		print LOG $array[0]," is used for gs-report.\n";
 	}
