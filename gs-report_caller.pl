@@ -32,7 +32,7 @@ Mandatory Parameters:
                         Human: /data/jyin/Databases/gstools-db/gstools-db-config_human.txt
                         Mouse: /data/jyin/Databases/gstools-db/gstools-db-config_mouse.txt
 
-    --top|-t          # of top terms to show in figures [20]
+    --top             No. of top terms to show in figures [20]
 	
     --out|-o          Output folder
 	

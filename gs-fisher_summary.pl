@@ -129,8 +129,7 @@ my $outfoldername=basename($outfolder);
 my $outfile = abs_path($outfolder)."/".$outfoldername.".xlsx";
 
 
-my $logfile=$outfile;
-$logfile="gs-fisher_summary.log";
+my $logfile="$outfolder/gs-fisher_summary.log";
 
 
 #write log file
