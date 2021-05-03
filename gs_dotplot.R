@@ -58,6 +58,9 @@ topnum=min(topnum,nrow(data.color))
 data.color.top<-data.color[order(apply(data.color,1,sum),decreasing = T)[1:topnum],]
 data.size.top<-data.size[order(apply(data.color,1,sum),decreasing = T)[1:topnum],]
 
+rownames(data.color.top)<-make.names(substr(rownames(data.color.top),1,50),unique=T)
+
+
 #df
 #sizename<-make.names(args$sizename)
 #colorname<-make.names(args$colorname)
@@ -76,7 +79,6 @@ data.df<-data.frame(factor(rep(colnames(data.color),each=topnum),levels=colnames
 data.df<-data.df[data.df[,3]!=0,]
 
 colnames(data.df)<-c("Comparison","Gene Set", sizename, colorname)			  
-rownames(data.color)<-make.names(substr(rownames(data.color),1,50),unique=T)
 
 #figure output
 
@@ -85,7 +87,7 @@ figure1<-args$out
 
 #auto calculate length
 
-CairoPNG(file=figure1,res = 300,width = 2+floor(max(nchar(rownames(data.color))/10))+ncol(data.color)*0.5,height = 3+0.4*topnum,units = "in")
+CairoPNG(file=figure1,res = 300,width = 2+floor(max(nchar(rownames(data.color.top))/10))+ncol(data.color)*0.5,height = 3+0.4*topnum,units = "in")
 
 plot1<-ggplot(data.df, aes_string(x="Comparison", y="`Gene Set`" , size=sizename, color=colorname.rev)) + geom_point(alpha = 1)+theme_classic() +scale_color_gradient2(low = "blue",  mid="grey",high = "red", space = "Lab", limit = c(0, max(data.df[[colorname]])))+scale_size(range = c(0, 10))+ theme(axis.text.x = element_text(angle = 90,size = 10 ),axis.text.y = element_text(angle = 0,size = 10 ))
 
