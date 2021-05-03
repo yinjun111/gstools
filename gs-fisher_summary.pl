@@ -28,6 +28,7 @@ Mandatory Parameters:
     --in|-i           Input folder(s)					  
     --out|-o          Output folder
     --sigonly|-s      Only significant results [T]	
+    --top|-t          # of top terms to show in figures [20]	
     --verbose|-v      Verbose
 	
 ";
@@ -51,6 +52,7 @@ my $infolders;
 my $outfolder;
 
 my $sigonly="T";
+my $topnum=20;
 
 my $verbose=1;
 my $runmode="none";
@@ -61,6 +63,7 @@ GetOptions(
 	"in|i=s" => \$infolders,
 	"out|o=s"=>\$outfolder,
 	"sigonly|s=s"=>\$sigonly,
+	"top|t=s"=>\$topnum,	
 	"verbose"=>\$verbose,
 	"dev" => \$dev,		
 );
@@ -127,7 +130,7 @@ my $outfile = abs_path($outfolder)."/".$outfoldername.".xlsx";
 
 
 my $logfile=$outfile;
-$logfile=~s/\.\w+$/_gs-fisher_summary.log/;
+$logfile="gs-fisher_summary.log";
 
 
 #write log file
@@ -287,8 +290,8 @@ foreach my $outfile_sel (@outfiles) {
 	print STDERR "Generating heatmap for $outfile_sel.\n";
 	print LOG "Generating heatmap for $outfile_sel.\n";
 
-	system("$rscript $gs_heatmap -i $outfile_sel -o $outfilefig");
-	print LOG "$rscript $gs_heatmap -i $outfile_sel -o $outfilefig\n";
+	system("$rscript $gs_heatmap -i $outfile_sel -o $outfilefig --top $topnum");
+	print LOG "$rscript $gs_heatmap -i $outfile_sel -o $outfilefig --top $topnum\n";
 	
 }
 
@@ -298,15 +301,15 @@ foreach my $outfile_sel (@outfiles) {
 my $outfiledpfig1=$outfile;
 $outfiledpfig1=~s/\.\w+$/_orbhp_dotplot.png/;
 	
-system("$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1");
-print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1\n";
+system("$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum");
+print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum\n";
 
 
 my $outfiledpfig2=$outfile;
 $outfiledpfig2=~s/\.\w+$/_orrawp_dotplot.png/;
 
-system("$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2");
-print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2\n";
+system("$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum");
+print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum\n";
 
 close LOG;
 

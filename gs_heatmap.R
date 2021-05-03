@@ -15,6 +15,7 @@ parser <- arg_parser(description=description)
 
 parser <- add_argument(parser, arg="--in",short="-i", type="character", help = "Input file, a p/q value matrix")
 parser <- add_argument(parser, arg="--out",short="-o", type="character", help = "Output file, png format")
+parser <- add_argument(parser, arg="--top",short="-t", type="character", help = "# of top terms to show")
 
 args = parse_args(parser)
 
@@ -64,15 +65,19 @@ gs_heatmap<-function(val,topnum=30,na.val=1,zero.val=0.0001,sort.by="decreasing"
 
 data<-read.table(args$"in",header=T,row.names=1,sep="\t",quote="",comment.char="")
 
+#top terms 
+topnum=args$top
+topnum=min(topnum,nrow(data))
+
 figure1<-args$out
 
 figure2=sub(".png$","_clustered.png",figure1,perl=T)
 
 
 CairoPNG(file=figure1,res = 300,width = 15,height = 10,units = "in")
-gs_heatmap(data,cluster_cols = F,topnum = 30)
+gs_heatmap(data,cluster_cols = F,topnum = topnum)
 dev.off()
 
 CairoPNG(file=figure2,res = 300,width = 15,height = 10,units = "in")
-gs_heatmap(data,cluster_cols = T,topnum = 30)
+gs_heatmap(data,cluster_cols = T,topnum = topnum)
 dev.off()

@@ -32,6 +32,8 @@ Mandatory Parameters:
                         Human: /data/jyin/Databases/gstools-db/gstools-db-config_human.txt
                         Mouse: /data/jyin/Databases/gstools-db/gstools-db-config_mouse.txt
 
+    --top|-t          # of top terms to show in figures [20]
+	
     --out|-o          Output folder
 	
 ";
@@ -55,6 +57,7 @@ my $inputfolder;
 my $tx;
 my $configfile;
 my $outputfolder;
+my $topnum=20;
 my $dev=0;
 	
 my $verbose=1;
@@ -63,7 +66,8 @@ my $verbose=1;
 GetOptions(
 	"input|i=s" => \$inputfolder,
 	"tx|t=s" => \$tx,
-	"config|c=s" => \$configfile,	
+	"config|c=s" => \$configfile,
+	"top=s"=>\$topnum,	
 	"out|o=s"=>\$outputfolder,
 	"dev" => \$dev,	
 );
@@ -199,12 +203,13 @@ close IN;
 open(S1,">$scriptfile1") || die $!;
 foreach my $dbfile (sort keys %dbfiles) {
 	#both
-	print S1 "$gs_fisher -i $inputfolder/rnaseq-summary_GeneDESigs.txt -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},";";
-	print S1 "$gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary;\n";
+	print S1 "perl $gs_fisher -i $inputfolder/rnaseq-summary_GeneDESigs.txt -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
+	
+	print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --top $topnum",print_dev($dev,";\n");
 
 	#updown
-	print S1 "$gs_fisher -i $inputfolder/rnaseq-summary_GeneDESigs.txt -t matrix -c updown -o $outputfolder/$dbfiles{$dbfile}_updown -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},";";
-	print S1 "$gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary;\n";
+	print S1 "perl $gs_fisher -i $inputfolder/rnaseq-summary_GeneDESigs.txt -t matrix -c updown -o $outputfolder/$dbfiles{$dbfile}_updown -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
+	print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary --top $topnum",print_dev($dev,";\n");
 
 }
 close S1;
@@ -219,3 +224,13 @@ sub current_time {
 	return $now;
 }
 
+sub print_dev {
+	my ($dev_value,$toprint)=@_;
+	
+	if($dev_value) {
+		return " --dev$toprint";
+	}
+	else {
+		return "$toprint";
+	}
+}

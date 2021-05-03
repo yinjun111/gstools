@@ -18,6 +18,7 @@ parser <- add_argument(parser, arg="--sizename", type="character", help = " Inpu
 parser <- add_argument(parser, arg="--color",short="-c", type="character", help = "Input file for dot color, e.g. p/q value matrix")
 parser <- add_argument(parser, arg="--colorname",type="character", help = "Input file for dot color, e.g. p/q value matrix")
 parser <- add_argument(parser, arg="--out",short="-o", type="character", help = "Output file, png format")
+parser <- add_argument(parser, arg="--top",short="-t", type="character", help = "# of top terms to show")
 
 args = parse_args(parser)
 
@@ -36,10 +37,10 @@ library(ggplot2)
 
 cols <- brewer.pal(9, "Reds")
 pal <- colorRampPalette(cols)
-topnum=30
 
 data.size<-read.table(args$"size",header=T,row.names=1,sep="\t",quote="",comment.char="")
 data.color<-read.table(args$"color",header=T,row.names=1,sep="\t",quote="",comment.char="")
+
 
 #conversion for size #or
 data.size[is.na(data.size)]<-0
@@ -50,6 +51,7 @@ data.color[data.color==0] <- 1e-32
 data.color<- -log10(data.color)
 
 #top terms #by color
+topnum=as.numeric(args$top)
 topnum=min(topnum,nrow(data.color))
 
 #select by data color
@@ -81,7 +83,7 @@ colnames(data.df)<-c("Comparison","Gene Set", sizename, colorname)
 figure1<-args$out
 
 #auto calculate length
-CairoPNG(file=figure1,res = 300,width = 4+floor(max(length(rownames(data.color))/30))+ncol(data.color),height = 3+0.4*topnum,units = "in")
+CairoPNG(file=figure1,res = 300,width = 2+floor(max(length(rownames(data.color))/10))+ncol(data.color)*0.5,height = 3+0.4*topnum,units = "in")
 
 plot1<-ggplot(data.df, aes_string(x="Comparison", y="`Gene Set`" , size=sizename, color=colorname.rev)) + geom_point(alpha = 1)+theme_classic() +scale_color_gradient2(low = "blue",  mid="grey",high = "red", space = "Lab", limit = c(0, max(data.df[[colorname]])))+scale_size(range = c(0, 10))+ theme(axis.text.x = element_text(angle = 90,size = 10 ),axis.text.y = element_text(angle = 0,size = 10 ))
 
