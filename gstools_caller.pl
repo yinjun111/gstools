@@ -15,22 +15,12 @@ gstools
 version: $version
 Usage: gstools [tool] [parameters]
 
-
 Parameters:
 
-    ########
-    #RNA-Seq
-    ########
-    rnaseq-process    RNA-seq QC, Align, and RSEM for FASTQ files
-    rnaseq-merge      Merge rnaseq-process results for downstream analyses
-    rnaseq-de         Perform DE analysis using DESeq2
-    rnaseq-summary    Summarize RNA-Seq DE results
-
-    rnaseq-var        RNA-seq variant calling pipeline
-    rnaseq-motif      RNA-seq TFBS motif finding pipeline
-    rnaseq-motif-summary  RNA-seq TFBS motif finding results summary	
-    motif-finder      Transcription factor binding motif prediction
-
+    gs-report    Automatically generate Gene Set Analyses results for rnaseq-summary
+    gs-fisher    Perform Fisher's Exact Test for gene lists
+    gs-fisher-summary   Summarize gs-fisher results
+    list-dbs     List current databases for gs-fisher
 
 ";
 
@@ -75,18 +65,17 @@ else {
 #####
 
 
-my $bs_fastq="$gstoolsfolder/bs-fastq/bs-fastq_caller.pl";
-my $geo_download="$gstoolsfolder/geo-download/geo-download_caller.pl";
+my $gs_report="perl $gstoolsfolder/gs-report_caller.pl";
+my $gs_fisher="perl $gstoolsfolder/gs-fisher_caller.pl";
+my $gs_fisher_summary="perl $gstoolsfolder/gs-fisher_summary.pl";
+my $list_dbs="sh $gstoolsfolder/list-dbs.sh";
 
 
 my %commands2program=(
-    "bs-fastq"=>$bs_fastq,
-	"geo-download"=>$geo_download,
-	
-    "rnaseq-process"=>$rnaseq_process,
-    "rnaseq-merge"=>$rnaseq_merge,
-    "rnaseq-de"=>$rnaseq_de,
-	"rnaseq-summary"=>$rnaseq_summary,
+    "gs-report"=>$gs_report,
+    "gs-fisher"=>$gs_fisher,
+	"gs-fisher-summary"=>$gs_fisher_summary,
+	"list-dbs"=>$list_dbs,
 );
 
 
