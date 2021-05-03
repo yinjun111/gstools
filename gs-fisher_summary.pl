@@ -197,7 +197,7 @@ foreach my $infolder (split(",",$infolders)) {
 }
 
 #2,3,5,6
-#number, gene, OR, bhp, 
+#number, gene, OddsRatio, bhp, 
 my @outfiles;
 
 my $outfile1=$outfile;
@@ -274,7 +274,7 @@ $exceloutfile=~s/\.\w+$/\.xlsx/;
 print STDERR "Converting outputs to excel file:$exceloutfile.\n\n";
 print LOG "Converting outputs to excel file:$exceloutfile.\n\n";
 
-system("$text2excel -i $outfile1,$outfile2,$outfile3,$outfile4,$outfile5 -n Number,Gene,OR,Q,P -o $exceloutfile --theme theme2");
+system("$text2excel -i $outfile1,$outfile2,$outfile3,$outfile4,$outfile5 -n Number,Gene,OddsRatio,Q,P -o $exceloutfile --theme theme2");
 
 
 
@@ -295,20 +295,20 @@ foreach my $outfile_sel (@outfiles) {
 }
 
 #Generate dotplot for or+p and or+q
-#OR+p
+#OddsRatio+p
 
 my $outfiledpfig1=$outfile;
 $outfiledpfig1=~s/\.\w+$/_orbhp_dotplot.png/;
 	
-system("$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum");
-print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum\n";
+system("$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum");
+print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum\n";
 
 
 my $outfiledpfig2=$outfile;
 $outfiledpfig2=~s/\.\w+$/_orrawp_dotplot.png/;
 
-system("$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum");
-print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OR --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum\n";
+system("$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum");
+print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum\n";
 
 close LOG;
 
