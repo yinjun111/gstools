@@ -55,6 +55,7 @@ my $inputfolder;
 my $tx;
 my $configfile;
 my $outputfolder;
+my $dev=0;
 	
 my $verbose=1;
 
@@ -64,6 +65,7 @@ GetOptions(
 	"tx|t=s" => \$tx,
 	"config|c=s" => \$configfile,	
 	"out|o=s"=>\$outputfolder,
+	"dev" => \$dev,	
 );
 
 
@@ -75,9 +77,17 @@ GetOptions(
 my $mergefiles="/apps/omictools/mergefiles/mergefiles_caller.pl";
 my $text2excel="perl /apps/omictools/text2excel/text2excel.pl";
 
+
 #gstools
-my $gs_fisher="/apps/gstools/gs-fisher_caller.pl";
-my $gs_fisher_summary="/apps/gstools/gs-fisher_summary.pl";
+my $gstoolsfolder="/apps/gstools/";
+
+#adding --dev switch for better development process
+if($dev) {
+	$gstoolsfolder="/home/centos/Pipeline/gstools/";
+}
+
+my $gs_fisher="$gstoolsfolder/gs-fisher_caller.pl";
+my $gs_fisher_summary="$gstoolsfolder/gs-fisher_summary.pl";
 
 
 
@@ -163,6 +173,9 @@ if(!-e "$inputfolder/rnaseq-summary_GeneDESigs.txt") {
 	exit;
 }
 
+print STDERR "$inputfolder/rnaseq-summary_GeneDESigs.txt is analyzed by gs-report.\n\n";
+print LOG "$inputfolder/rnaseq-summary_GeneDESigs.txt is analyzed by gs-report.\n\n";
+
 #choose db to work on
 my %dbfiles;
 
@@ -174,6 +187,8 @@ while(<IN>) {
 	
 	if($array[4] eq "Y") {
 		$dbfiles{$array[2]}=$array[0];
+		print STDERR $array[0]," is used for gs-report.\n";
+		print LOG $array[0]," is used for gs-report.\n";
 	}
 }
 close IN;
@@ -185,11 +200,11 @@ open(S1,">$scriptfile1") || die $!;
 foreach my $dbfile (sort keys %dbfiles) {
 	#both
 	print S1 "$gs_fisher -i $inputfolder/rnaseq-summary_GeneDESigs.txt -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},";";
-	print S1 "$gs_fisher -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary;\n";
+	print S1 "$gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary;\n";
 
 	#updown
 	print S1 "$gs_fisher -i $inputfolder/rnaseq-summary_GeneDESigs.txt -t matrix -c updown -o $outputfolder/$dbfiles{$dbfile}_updown -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},";";
-	print S1 "$gs_fisher -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary;\n";
+	print S1 "$gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary;\n";
 
 }
 close S1;
