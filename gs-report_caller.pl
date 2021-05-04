@@ -32,6 +32,9 @@ Mandatory Parameters:
                         Human: /data/jyin/Databases/gstools-db/gstools-db-config_human.txt
                         Mouse: /data/jyin/Databases/gstools-db/gstools-db-config_mouse.txt
 
+    --comparisons     (Optional) Name of comparisons to be tested in gs analyses
+                         By default, all the comparisons in the rnaseq-summary folder
+
     --top             No. of top terms to show in figures [20]
 	
     --out|-o          Output folder
@@ -56,6 +59,7 @@ my $params=join(" ",@ARGV);
 my $inputfolder;
 my $tx;
 my $configfile;
+my $comparisons;
 my $outputfolder;
 my $topnum=20;
 my $dev=0;
@@ -67,6 +71,7 @@ GetOptions(
 	"input|i=s" => \$inputfolder,
 	"tx|t=s" => \$tx,
 	"config|c=s" => \$configfile,
+	"comparisons=s" => \$comparisons,
 	"top=s"=>\$topnum,	
 	"out|o=s"=>\$outputfolder,
 	"dev" => \$dev,	
@@ -180,6 +185,64 @@ if(!-e "$inputfolder/rnaseq-summary_GeneDESigs.txt") {
 print STDERR "$inputfolder/rnaseq-summary_GeneDESigs.txt is analyzed by gs-report.\n\n";
 print LOG "$inputfolder/rnaseq-summary_GeneDESigs.txt is analyzed by gs-report.\n\n";
 
+
+#generate new DE sigs based on --comparisons
+#pre-selected comparisons
+my @selcomparisons;
+my %selcomparisons_hash;
+if(defined $comparisons && length($comparisons)>0) { 
+	#keep original order
+	@selcomparisons=split(",",$comparisons);
+	%selcomparisons_hash=map {$_,1} @selcomparisons;
+}
+
+my $newsigfile="$outputfolder/rnaseq-summary_GeneDESigs_selected.txt";
+
+my %comp2col;
+my @selcols;
+
+if(@selcomparisons) {
+	open(OUT,">$newsigfile") || die $!;
+	open(IN,"$inputfolder/rnaseq-summary_GeneDESigs.txt") || die $!;
+	while(<IN>) {
+		tr/\r\n//d;
+		my @array=split/\t/;
+		
+		if($_=~/^Gene/) {
+			for(my $num=1;$num<@array;$num++) {
+				$comp2col{$array[$num]}=$num;
+			}
+			
+			foreach my $comp (@selcomparisons) {
+				if(defined $comp2col{$comp}) {
+					push @selcols,$comp2col{$comp};
+					print STDERR $comp," is identifed at $comp2col{$comp}(th) column.\n";
+					print LOG $comp," is identifed at $comp2col{$comp}(th) column.\n";
+				}
+				else {
+					print STDERR "ERROR:$comp is not defined in $inputfolder/rnaseq-summary_GeneDESigs.txt\n\n";
+					print LOG "ERROR:$comp is not defined in $inputfolder/rnaseq-summary_GeneDESigs.txt\n\n";
+					exit;
+				}
+			}
+			
+			print STDERR "Columns ", join(",",@selcols)," are used by --comparisons $comparisons.\n";
+			print LOG "Columns ", join(",",@selcols)," are used by --comparisons $comparisons.\n";			
+			
+		}
+		
+		print OUT join("\t",@array[0,@selcols]),"\n";
+	}
+	close IN;
+	close OUT;
+
+}
+else {
+	system("cp $inputfolder/rnaseq-summary_GeneDESigs.txt $newsigfile");
+}
+
+
+
 #choose db to work on
 my %dbfiles;
 
@@ -203,12 +266,12 @@ close IN;
 open(S1,">$scriptfile1") || die $!;
 foreach my $dbfile (sort keys %dbfiles) {
 	#both
-	print S1 "perl $gs_fisher -i $inputfolder/rnaseq-summary_GeneDESigs.txt -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
+	print S1 "perl $gs_fisher -i $newsigfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
 	
 	print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --top $topnum",print_dev($dev,";\n");
 
 	#updown
-	print S1 "perl $gs_fisher -i $inputfolder/rnaseq-summary_GeneDESigs.txt -t matrix -c updown -o $outputfolder/$dbfiles{$dbfile}_updown -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
+	print S1 "perl $gs_fisher -i $newsigfile -t matrix -c updown -o $outputfolder/$dbfiles{$dbfile}_updown -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
 	print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary --top $topnum",print_dev($dev,";\n");
 
 }

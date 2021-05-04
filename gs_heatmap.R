@@ -66,7 +66,7 @@ gs_heatmap<-function(val,topnum=30,na.val=1,zero.val=0.0001,sort.by="decreasing"
 data<-read.table(args$"in",header=T,row.names=1,sep="\t",quote="",comment.char="")
 
 #top terms 
-topnum=args$top
+topnum=as.numeric(args$top)
 topnum=min(topnum,nrow(data))
 
 figure1<-args$out
