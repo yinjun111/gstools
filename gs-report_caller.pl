@@ -268,11 +268,24 @@ foreach my $dbfile (sort keys %dbfiles) {
 	#both
 	print S1 "perl $gs_fisher -i $newsigfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
 	
-	print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --top $topnum",print_dev($dev,";\n");
+	if(@selcomparisons) {
+		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --comparisons $comparisons --top $topnum",print_dev($dev,";\n");
+	}
+	else {
+		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --top $topnum",print_dev($dev,";\n");
+	}
 
 	#updown
 	print S1 "perl $gs_fisher -i $newsigfile -t matrix -c updown -o $outputfolder/$dbfiles{$dbfile}_updown -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
-	print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary --top $topnum",print_dev($dev,";\n");
+	
+	if(@selcomparisons) {
+		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary --comparisons $comparisons--top $topnum",print_dev($dev,";\n");
+	}
+	else {
+		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary --top $topnum",print_dev($dev,";\n");
+	}
+	
+	
 
 }
 close S1;

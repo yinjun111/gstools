@@ -4,7 +4,7 @@ use strict;
 use Getopt::Long;
 use Cwd qw(abs_path);
 use File::Basename qw(basename dirname);
-
+use Data::Dumper qw(Dumper);
 
 ########
 #Interface
@@ -28,6 +28,10 @@ Mandatory Parameters:
     --in|-i           Input folder(s)					  
     --out|-o          Output folder
     --sigonly|-s      Only significant results [T]	
+
+    --comparisons     (Optional) Name of comparisons to be tested in gs analyses
+                         By default, all the comparisons in the gs-fisher folder
+
     --suffix|-x       Remove suffix from file names [_gs-fisher.txt]
     --top|-t          # of top terms to show in figures [20]	
     --verbose|-v      Verbose
@@ -54,6 +58,7 @@ my $outfolder;
 
 my $sigonly="T";
 my $topnum=20;
+my $comparisons;
 my $suffix="_gs-fisher.txt";
 
 my $verbose=1;
@@ -65,6 +70,7 @@ GetOptions(
 	"in|i=s" => \$infolders,
 	"out|o=s"=>\$outfolder,
 	"sigonly|s=s"=>\$sigonly,
+	"comparisons=s" => \$comparisons,	
 	"suffix|x=s"=>\$suffix,	
 	"top|t=s"=>\$topnum,	
 	"verbose"=>\$verbose,
@@ -118,7 +124,7 @@ my $gs_dotplot="$gstoolsfolder/gs_dotplot.R";
 
 #mkpath for recursive make dir
 
-print STDERR "\nomictools gs-fisher $version running ...\n\n" if $verbose;
+print STDERR "\ngstools gs-fisher $version running ...\n\n" if $verbose;
 
 if(!-e $outfolder) {
 	print STDERR "$outfolder not found. mkdir $outfolder\n";
@@ -146,12 +152,26 @@ print LOG "Current version: $version\n\n";
 
 print LOG "\n";
 
-print LOG "\nomictools gs-fisher_summary $version running ...\n\n";
+print LOG "\ngstools gs-fisher_summary $version running ...\n\n";
 
 
 ########
 #Process
 ########
+
+#pre-selected comparisons
+my @selcomparisons;
+my %selcomparisons_hash;
+if(defined $comparisons && length($comparisons)>0) { 
+	#keep original order
+	#need to convert non-char in $comp 
+	foreach my $comp (split(",",$comparisons)) {
+		$comp=~s/\W/_/g;
+		push @selcomparisons,$comp;
+	}
+	
+	%selcomparisons_hash=map {$_,1} @selcomparisons;
+}
 
 #or,BHP, gene, number
 
@@ -181,6 +201,16 @@ foreach my $infolder (split(",",$infolders)) {
 					}
 					$files{$samplename}++;
 					print STDERR $file," detected from gstools.\n";
+					print LOG $file," detected from gstools.\n";
+					
+					#check --comparisons
+					if(@selcomparisons) {
+						unless(defined $selcomparisons_hash{$samplename}) {
+							print STDERR "$samplename is not defined in --comparisons $comparisons. Skip...\n";
+							print LOG "$samplename is not defined in --comparisons $comparisons. Skip...\n";
+							next;
+						}
+					}
 				}
 				else {
 					my @array=split/\t/;
@@ -205,9 +235,37 @@ foreach my $infolder (split(",",$infolders)) {
 	}
 }
 
+#check comparisons vs detected samplename
+
+my @usedcomparisons;
+
+if(@selcomparisons) {
+	foreach my $comp (@selcomparisons) {
+		unless(defined $file2gs{$comp}) {
+			print STDERR "ERROR:$comp was not found in --in $infolders.\n";
+			print LOG "ERROR:$comp was not found in --in $infolders.\n";
+			exit;
+		}
+	}
+	@usedcomparisons=@selcomparisons;
+}
+else {
+	@usedcomparisons=sort keys %file2gs;
+}
+
+
+#error message
+
+if(@usedcomparisons ==0) {
+	print STDERR "\nERROR:No gs-fisher results are detected in $infolders\n\n";
+	print LOG "\nERROR:No gs-fisher results are detected in $infolders\n\n";
+	exit;
+}
+
+
 #2,3,5,6
 #number, gene, OddsRatio, bhp, 
-my @outfiles;
+my @outfiles_forheatmap;
 
 my $outfile1=$outfile;
 $outfile1=~s/\.\w+$/_num.txt/;
@@ -223,12 +281,12 @@ open(OUT3,">$outfile3") || die $!;
 
 my $outfile4=$outfile;
 $outfile4=~s/\.\w+$/_q.txt/;
-push @outfiles,$outfile4;
+push @outfiles_forheatmap,$outfile4;
 open(OUT4,">$outfile4") || die $!;
 
 my $outfile5=$outfile;
 $outfile5=~s/\.\w+$/_p.txt/;
-push @outfiles,$outfile5;
+push @outfiles_forheatmap,$outfile5;
 
 open(OUT5,">$outfile5") || die $!;
 
@@ -247,7 +305,7 @@ foreach my $gs (sort keys %gss) {
 	
 	my (@marks1,@marks2,@marks3,@marks4,@marks5);
 	
-	foreach my $file (sort keys %file2gs) {
+	foreach my $file (@usedcomparisons) {
 		if(defined $file2gs{$file}{$gs}) {
 			push @marks1,$file2gs{$file}{$gs}[2];
 			push @marks2,$file2gs{$file}{$gs}[3];
@@ -291,7 +349,7 @@ system("$text2excel -i $outfile1,$outfile2,$outfile3,$outfile4,$outfile5 -n Numb
 
 #Generate heatmap figures for p/q
 
-foreach my $outfile_sel (@outfiles) {
+foreach my $outfile_sel (@outfiles_forheatmap) {
 	my $outfilefig=$outfile_sel;
 	$outfilefig=~s/\.\w+$/_heatmap.png/;	
 
