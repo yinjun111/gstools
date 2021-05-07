@@ -290,11 +290,11 @@ push @outfiles_forheatmap,$outfile5;
 
 open(OUT5,">$outfile5") || die $!;
 
-print OUT1 "Gene set\t",join("\t",sort keys %files),"\n";
-print OUT2 "Gene set\t",join("\t",sort keys %files),"\n";
-print OUT3 "Gene set\t",join("\t",sort keys %files),"\n";
-print OUT4 "Gene set\t",join("\t",sort keys %files),"\n";
-print OUT5 "Gene set\t",join("\t",sort keys %files),"\n";
+print OUT1 "Gene set\t",join("\t",@usedcomparisons),"\n";
+print OUT2 "Gene set\t",join("\t",@usedcomparisons),"\n";
+print OUT3 "Gene set\t",join("\t",@usedcomparisons),"\n";
+print OUT4 "Gene set\t",join("\t",@usedcomparisons),"\n";
+print OUT5 "Gene set\t",join("\t",@usedcomparisons),"\n";
 
 foreach my $gs (sort keys %gss) {
 	print OUT1 $gs,"\t";
