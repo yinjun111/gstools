@@ -36,6 +36,7 @@ Mandatory Parameters:
                          By default, all the comparisons in the rnaseq-summary folder
 
     --top             No. of top terms to show in figures [20]
+    --sortby          Column name used to sort the top terms, or averge of all columns [avg]
 	
     --out|-o          Output folder
 	
@@ -62,6 +63,7 @@ my $configfile;
 my $comparisons;
 my $outputfolder;
 my $topnum=20;
+my $sortby="avg";
 my $dev=0;
 	
 my $verbose=1;
@@ -73,6 +75,7 @@ GetOptions(
 	"config|c=s" => \$configfile,
 	"comparisons=s" => \$comparisons,
 	"top=s"=>\$topnum,	
+	"sortby=s" => \$sortby,
 	"out|o=s"=>\$outputfolder,
 	"dev" => \$dev,	
 );
@@ -189,10 +192,12 @@ print LOG "$inputfolder/rnaseq-summary_GeneDESigs.txt is analyzed by gs-report.\
 #generate new DE sigs based on --comparisons
 #pre-selected comparisons
 my @selcomparisons;
+my @selcomparisons_updown;
 my %selcomparisons_hash;
 if(defined $comparisons && length($comparisons)>0) { 
 	#keep original order
 	@selcomparisons=split(",",$comparisons);
+	@selcomparisons_updown=((map {$_."_up"} @selcomparisons),(map {$_."_down"} @selcomparisons));
 	%selcomparisons_hash=map {$_,1} @selcomparisons;
 }
 
@@ -269,23 +274,35 @@ foreach my $dbfile (sort keys %dbfiles) {
 	print S1 "perl $gs_fisher -i $newsigfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
 	
 	if(@selcomparisons) {
-		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --comparisons $comparisons --top $topnum",print_dev($dev,";\n");
+		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --comparisons $comparisons --top $topnum --sortby $sortby",print_dev($dev,";\n");
 	}
 	else {
-		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --top $topnum",print_dev($dev,";\n");
+		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --top $topnum --sortby $sortby",print_dev($dev,";\n");
 	}
 
 	#updown
 	print S1 "perl $gs_fisher -i $newsigfile -t matrix -c updown -o $outputfolder/$dbfiles{$dbfile}_updown -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
 	
-	if(@selcomparisons) {
-		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary --comparisons $comparisons--top $topnum",print_dev($dev,";\n");
+	if($sortby eq "avg") {
+		if(@selcomparisons) {
+			print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary --comparisons ",join(",",@selcomparisons_updown)," --top $topnum --sortby $sortby",print_dev($dev,";\n");
+		}
+		else {
+			#
+			print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary --top ",int($topnum/2)," --sortby $sortby",print_dev($dev,";\n");	
+		}
 	}
 	else {
-		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary --top $topnum",print_dev($dev,";\n");
+		if(@selcomparisons) {
+			print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary_sortbyup --comparisons ",join(",",@selcomparisons_updown)," --top ",int($topnum/2)," --sortby $sortby\_up",print_dev($dev,";");
+			print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary_sortbydown --comparisons ",join(",",@selcomparisons_updown)," --top ",int($topnum/2)," --sortby $sortby\_down",print_dev($dev,";\n");			
+		}
+		else {
+			#
+			print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary_sortbyup --top ",int($topnum/2)," --sortby $sortby\_up",print_dev($dev,";");
+			print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary_sortbydown --top ",int($topnum/2)," --sortby $sortby\_down",print_dev($dev,";\n");		
+		}	
 	}
-	
-	
 
 }
 close S1;

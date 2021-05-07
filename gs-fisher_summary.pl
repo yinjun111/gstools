@@ -33,7 +33,8 @@ Mandatory Parameters:
                          By default, all the comparisons in the gs-fisher folder
 
     --suffix|-x       Remove suffix from file names [_gs-fisher.txt]
-    --top|-t          # of top terms to show in figures [20]	
+    --top|-t          # of top terms to show in figures [20]
+    --sortby|-y       Sort by which comparison [avg]
     --verbose|-v      Verbose
 	
 ";
@@ -58,6 +59,7 @@ my $outfolder;
 
 my $sigonly="T";
 my $topnum=20;
+my $sortby="avg";
 my $comparisons;
 my $suffix="_gs-fisher.txt";
 
@@ -71,6 +73,7 @@ GetOptions(
 	"out|o=s"=>\$outfolder,
 	"sigonly|s=s"=>\$sigonly,
 	"comparisons=s" => \$comparisons,	
+	"sortby=s" => \$sortby,
 	"suffix|x=s"=>\$suffix,	
 	"top|t=s"=>\$topnum,	
 	"verbose"=>\$verbose,
@@ -356,8 +359,8 @@ foreach my $outfile_sel (@outfiles_forheatmap) {
 	print STDERR "Generating heatmap for $outfile_sel.\n";
 	print LOG "Generating heatmap for $outfile_sel.\n";
 
-	system("$rscript $gs_heatmap -i $outfile_sel -o $outfilefig --top $topnum");
-	print LOG "$rscript $gs_heatmap -i $outfile_sel -o $outfilefig --top $topnum\n";
+	system("$rscript $gs_heatmap -i $outfile_sel -o $outfilefig --top $topnum --sortby $sortby");
+	print LOG "$rscript $gs_heatmap -i $outfile_sel -o $outfilefig --top $topnum --sortby $sortby\n";
 	
 }
 
@@ -367,15 +370,15 @@ foreach my $outfile_sel (@outfiles_forheatmap) {
 my $outfiledpfig1=$outfile;
 $outfiledpfig1=~s/\.\w+$/_orbhp_dotplot.png/;
 	
-system("$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum");
-print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum\n";
+system("$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum --sortby $sortby");
+print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum --sortby $sortby\n";
 
 
 my $outfiledpfig2=$outfile;
 $outfiledpfig2=~s/\.\w+$/_orrawp_dotplot.png/;
 
-system("$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum");
-print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum\n";
+system("$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum --sortby $sortby");
+print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum --sortby $sortby\n";
 
 close LOG;
 

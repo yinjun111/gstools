@@ -19,6 +19,7 @@ parser <- add_argument(parser, arg="--color",short="-c", type="character", help 
 parser <- add_argument(parser, arg="--colorname",type="character", help = "Input file for dot color, e.g. p/q value matrix")
 parser <- add_argument(parser, arg="--out",short="-o", type="character", help = "Output file, png format")
 parser <- add_argument(parser, arg="--top",short="-t", type="character", help = "# of top terms to show")
+parser <- add_argument(parser, arg="--sortby",short="-y", type="character",default ="avg", help = "Sort by which column")
 
 args = parse_args(parser)
 
@@ -41,6 +42,10 @@ pal <- colorRampPalette(cols)
 data.size<-read.table(args$"size",header=T,row.names=1,sep="\t",quote="",comment.char="")
 data.color<-read.table(args$"color",header=T,row.names=1,sep="\t",quote="",comment.char="")
 
+#remove non-word chars
+colnames(data.size)==gsub("\\W","_",colnames(data.size))
+colnames(data.color)==gsub("\\W","_",colnames(data.color))
+args$sortby=gsub("\\W","_",args$sortby)
 
 #conversion for size #or
 data.size[is.na(data.size)]<-0
@@ -55,8 +60,13 @@ topnum=as.numeric(args$top)
 topnum=min(topnum,nrow(data.color))
 
 #select by data color
-data.color.top<-data.color[order(apply(data.color,1,sum),decreasing = T)[1:topnum],]
-data.size.top<-data.size[order(apply(data.color,1,sum),decreasing = T)[1:topnum],]
+if(args$sortby=="avg") {
+	data.color.top<-data.color[order(apply(data.color,1,sum),decreasing = T)[1:topnum],]
+	data.size.top<-data.size[order(apply(data.color,1,sum),decreasing = T)[1:topnum],]
+} else {
+	data.color.top<-data.color[order(data.color[,args$sortby],decreasing = T)[1:topnum],]
+	data.size.top<-data.size[order(data.color[,args$sortby],decreasing = T)[1:topnum],]
+}
 
 rownames(data.color.top)<-make.names(substr(rownames(data.color.top),1,50),unique=T)
 
