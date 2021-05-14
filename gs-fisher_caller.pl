@@ -12,14 +12,14 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.5";
+my $version="0.6";
 
 #v0.2, add --type to accept different input types
 #v0.3, add excel output
 #v0.3a, add folder creation, solved failed tests issue
 #v0.41, AWS
 #v0.5, add --cate for directional changes
-
+#v0.6, add zscore calculation
 
 my $usage="
 
@@ -307,6 +307,8 @@ if(defined $annofile && length($annofile)>0) {
 my @comparison_names;
 open(IN,$infile) || die "ERROR:Can't read $infile.$!\n";
 
+#only matrix and de can do z-score calculation
+
 if($type eq "list") {
 
 	#
@@ -324,7 +326,7 @@ if($type eq "list") {
 			
 			if(defined $id && length($id)>0 && $id ne " ") {
 				if(defined $gene_used{$id}) {
-					$selgenes{$comparison_names[$num]}{$id}++;
+					$selgenes{$comparison_names[$num]}{$id}=1;
 				}
 			}
 		}
@@ -345,15 +347,21 @@ elsif($type eq "matrix") {
 			for(my $num=1;$num<@array;$num++) {
 				if(defined $array[$num] && length($array[$num])>0 && $array[$num] ne "NA" && $array[$num] ne " " && $array[$num] ne "0") {
 					if(defined $cates{"both"}) {
-						$selgenes{$comparison_names[$num-1]}{$array[0]}++;
+						if($array[$num]>0) {
+							$selgenes{$comparison_names[$num-1]}{$array[0]}=1; #in order to make it work, it has to be -1/1
+						}
+						else {
+							$selgenes{$comparison_names[$num-1]}{$array[0]}=-1; #in order to make it work, it has to be -1/1
+						}
 					}
 					
+					#probably no need for this anymmore
 					if(defined $cates{"updown"}) {
 						if($array[$num]==1) {
-							$selgenes{$comparison_names[$num-1]."-up"}{$array[0]}++;
+							$selgenes{$comparison_names[$num-1]."-up"}{$array[0]}=1;
 						}
 						elsif($array[$num]==-1) {
-							$selgenes{$comparison_names[$num-1]."-down"}{$array[0]}++;
+							$selgenes{$comparison_names[$num-1]."-down"}{$array[0]}=-1;
 						}
 					}
 				}
@@ -361,7 +369,7 @@ elsif($type eq "matrix") {
 		}
 		$ilinenum++;
 	}
-	#close IN;
+	close IN;
 }
 elsif($type eq "de") {
 	#rnaseq-de result
@@ -388,25 +396,30 @@ elsif($type eq "de") {
 			#use both for now #non-0
 			if(defined $cates{"both"}) {
 				if(defined $array[$num] && length($array[$num])>0 && $array[$num] ne "NA" && $array[$num] ne " " && $array[$num] ne "0") {
-					$selgenes{$comparison_names[0]}{$array[0]}++;
+					if($array[$num]>0) {
+						$selgenes{$comparison_names[0]}{$array[0]}=1;
+					}
+					else {
+						$selgenes{$comparison_names[0]}{$array[0]}=-1;
+					}
 				}
 			}
 			
+			#probably no need for this anymmore
 			if(defined $cates{"updown"}) {
 				if($array[$num]==1) {
-					$selgenes{$comparison_names[$num-1]."-up"}{$array[0]}++;
+					$selgenes{$comparison_names[$num-1]."-up"}{$array[0]}=1;
 				}
 				elsif($array[$num]==-1) {
-					$selgenes{$comparison_names[$num-1]."-down"}{$array[0]}++;
+					$selgenes{$comparison_names[$num-1]."-down"}{$array[0]}=-1;
 				}
 			}			
 		}
 		$ilinenum++;
 	}
-	#close IN;
+	close IN;
 }
 
-close IN;
 
 my @final_comparison_names=sort keys %selgenes;
 
@@ -461,7 +474,7 @@ foreach my $exp_id (@final_comparison_names) {
 	
 	my $total_num=keys %changed_gene; #n
 	
-	print TMP "Total\t$all_num\t$total_num\t-\n"; #N, n,
+	print TMP "Total\t$all_num\t$total_num\t-\t-\n"; #N, n,genes,z-score
 	
 	my $k_num;
 	
@@ -472,6 +485,9 @@ foreach my $exp_id (@final_comparison_names) {
 			
 			my %annos;
 			
+			my $ztotal;
+			my $zscore;
+			
 			if(defined $annofile && length($annofile)>0) {
 				foreach my $gene (sort keys %{$gs2gene_sel{$gs}}) {
 					if(defined $gene2anno{$gene}) {
@@ -479,14 +495,27 @@ foreach my $exp_id (@final_comparison_names) {
 					}
 					else {
 						$annos{$gene}++;
-					}
+					}								
 				}
 			}
 			else {
 				%annos=%{$gs2gene_sel{$gs}};
 			}
-					
-			print TMP $gs,"\t",$num1,"\t",$num2,"\t",join(";",sort keys %annos),"\n"; #M, m
+			
+			#z-score calculation
+			foreach my $gene (sort keys %{$gs2gene_sel{$gs}}) {
+				if(defined $selgenes{$exp_id}{$gene}) {
+					$ztotal+=$selgenes{$exp_id}{$gene};
+				}
+				else {
+					print STDERR "WARNING:$gene not defined in $exp_id.\n";
+				}								
+			}
+			
+			$zscore=$ztotal/sqrt($num2); #total/sqrt(m)
+									
+			#M,m,genes,z-score,
+			print TMP $gs,"\t",$num1,"\t",$num2,"\t",join(";",sort keys %annos),"\t",$zscore,"\n"; #M, m
 		
 		}
 	}
@@ -632,7 +661,7 @@ path_stat <- function(file_in,file_out,pmethod=c("hyper","fisher"),qmethod="BH",
     #pvalue<-c('-',realp)
 	#rvalue<-c('-',realr)
 	
-	totalline<-c("Total",table[1,2],table[1,3],"-","-","-","-","-")
+	totalline<-c("Total",table[1,2],table[1,3],"-","-","-","-","-","-")
 	#content<-data.frame(cbind(table,pvalue,rvalue,qvalue,sig))
 	content<-cbind(as.matrix(table[2:nrow(table),]),realp,realr,qvalue,sig)
 	
@@ -647,7 +676,7 @@ path_stat <- function(file_in,file_out,pmethod=c("hyper","fisher"),qmethod="BH",
 	
 	result<-rbind(totalline,as.matrix(content))
 	
-	colnames(result)<-c("Gene set",'No. of features in the gene set','No. of selected features in the gene set','Feature ID',paste(c('P value',pmethod,alternative),collapse=" "),'Odds Ratio',paste(c(qmethod,'Corrected P value'),collapse=" "),paste(c("Significance By",qmethod,'Corrected P value', Q),collapse=" "))
+	colnames(result)<-c("Gene set",'No. of features in the gene set','No. of selected features in the gene set','Feature ID','Z-score',paste(c('P value',pmethod,alternative),collapse=" "),'Odds Ratio',paste(c(qmethod,'Corrected P value'),collapse=" "),paste(c("Significance By",qmethod,'Corrected P value', Q),collapse=" "))
 
 	write.table(result,file=file_out,sep="\\t",row.names=FALSE,quote=F)
 	#cat(log)

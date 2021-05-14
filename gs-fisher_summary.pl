@@ -4,16 +4,16 @@ use strict;
 use Getopt::Long;
 use Cwd qw(abs_path);
 use File::Basename qw(basename dirname);
-use Data::Dumper qw(Dumper);
+#use Data::Dumper qw(Dumper);
 
 ########
 #Interface
 ########
 
 
-my $version="0.1";
+my $version="0.2";
 
-#v0.1
+#v0.2, change default dotplot to z+p/q
 
 my $usage="
 
@@ -222,7 +222,7 @@ foreach my $infolder (split(",",$infolders)) {
 					
 					if($sigonly eq "T") {
 						#keeps only significant results
-						if($array[7] eq "TRUE") {
+						if($array[8] eq "TRUE") {
 							$gss{$array[0]}++;
 						}
 					}
@@ -290,14 +290,21 @@ open(OUT4,">$outfile4") || die $!;
 my $outfile5=$outfile;
 $outfile5=~s/\.\w+$/_p.txt/;
 push @outfiles_forheatmap,$outfile5;
-
 open(OUT5,">$outfile5") || die $!;
+
+my $outfile6=$outfile;
+$outfile6=~s/\.\w+$/_z.txt/;
+open(OUT6,">$outfile6") || die $!;
+
+
+
 
 print OUT1 "Gene set\t",join("\t",@usedcomparisons),"\n";
 print OUT2 "Gene set\t",join("\t",@usedcomparisons),"\n";
 print OUT3 "Gene set\t",join("\t",@usedcomparisons),"\n";
 print OUT4 "Gene set\t",join("\t",@usedcomparisons),"\n";
 print OUT5 "Gene set\t",join("\t",@usedcomparisons),"\n";
+print OUT6 "Gene set\t",join("\t",@usedcomparisons),"\n";
 
 foreach my $gs (sort keys %gss) {
 	print OUT1 $gs,"\t";
@@ -305,37 +312,41 @@ foreach my $gs (sort keys %gss) {
 	print OUT3 $gs,"\t";
 	print OUT4 $gs,"\t";
 	print OUT5 $gs,"\t";
+	print OUT6 $gs,"\t";
 	
-	my (@marks1,@marks2,@marks3,@marks4,@marks5);
+	my (@marks1,@marks2,@marks3,@marks4,@marks5,@marks6);
 	
 	foreach my $file (@usedcomparisons) {
 		if(defined $file2gs{$file}{$gs}) {
-			push @marks1,$file2gs{$file}{$gs}[2];
-			push @marks2,$file2gs{$file}{$gs}[3];
-			push @marks3,$file2gs{$file}{$gs}[5];
-			push @marks4,$file2gs{$file}{$gs}[6];
-			push @marks5,$file2gs{$file}{$gs}[4];
+			push @marks1,$file2gs{$file}{$gs}[2]; #num
+			push @marks2,$file2gs{$file}{$gs}[3]; #gene
+			push @marks3,$file2gs{$file}{$gs}[6]; #or
+			push @marks4,$file2gs{$file}{$gs}[7]; #q
+			push @marks5,$file2gs{$file}{$gs}[5]; #p
+			push @marks6,$file2gs{$file}{$gs}[4]; #z
 		}
 		else {
 			push @marks1," ";
 			push @marks2," ";
 			push @marks3," ";
 			push @marks4," ";		
-			push @marks5," ";		
+			push @marks5," ";
+			push @marks6," ";			
 		}
 	}
 	print OUT1 join("\t",@marks1),"\n";
 	print OUT2 join("\t",@marks2),"\n";
 	print OUT3 join("\t",@marks3),"\n";
 	print OUT4 join("\t",@marks4),"\n";	
-	print OUT5 join("\t",@marks5),"\n";		
+	print OUT5 join("\t",@marks5),"\n";
+	print OUT6 join("\t",@marks6),"\n";	
 }
 close OUT1;
 close OUT2;
 close OUT3;
 close OUT4;
 close OUT5;
-
+close OUT6;
 
 #Merge files into excel file
 my $exceloutfile=$outfile;
@@ -344,7 +355,7 @@ $exceloutfile=~s/\.\w+$/\.xlsx/;
 print STDERR "Converting outputs to excel file:$exceloutfile.\n\n";
 print LOG "Converting outputs to excel file:$exceloutfile.\n\n";
 
-system("$text2excel -i $outfile1,$outfile2,$outfile3,$outfile4,$outfile5 -n Number,Gene,OddsRatio,Q,P -o $exceloutfile --theme theme2");
+system("$text2excel -i $outfile1,$outfile2,$outfile3,$outfile4,$outfile5,$outfile6 -n Number,Gene,OddsRatio,Q,P,Z -o $exceloutfile --theme theme2");
 
 
 
@@ -368,17 +379,31 @@ foreach my $outfile_sel (@outfiles_forheatmap) {
 #OddsRatio+p
 
 my $outfiledpfig1=$outfile;
-$outfiledpfig1=~s/\.\w+$/_orbhp_dotplot.png/;
-	
-system("$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum --sortby $sortby");
-print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum --sortby $sortby\n";
+
+#size by OR, color by bhp	
+#$outfiledpfig1=~s/\.\w+$/_orbhp_dotplot.png/;
+#system("$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum --sortby $sortby");
+#print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile4 --colorname \"'-Log10BHP'\" -o $outfiledpfig1 --top $topnum --sortby $sortby\n";
+
+#size by bhp, color by z
+$outfiledpfig1=~s/\.\w+$/_z_bhp_dotplot.png/;
+system("$rscript $gs_dotplot --size $outfile4 --sizename \"'-Log10BHP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig1 --top $topnum --sortby $sortby");
+print LOG "$rscript $gs_dotplot --size $outfile4 --sizename \"'-Log10BHP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig1 --top $topnum --sortby $sortby\n";
 
 
 my $outfiledpfig2=$outfile;
-$outfiledpfig2=~s/\.\w+$/_orrawp_dotplot.png/;
 
-system("$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum --sortby $sortby");
-print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum --sortby $sortby\n";
+
+#size by OR, color by rawp	
+#$outfiledpfig2=~s/\.\w+$/_orrawp_dotplot.png/;
+#system("$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum --sortby $sortby");
+#print LOG "$rscript $gs_dotplot --size $outfile3 --sizename OddsRatio --color $outfile5 --colorname \"'-Log10RawP'\" -o $outfiledpfig2 --top $topnum --sortby $sortby\n";
+
+#size by bhp, color by z
+$outfiledpfig2=~s/\.\w+$/_z_rawp_dotplot.png/;
+system("$rscript $gs_dotplot --size $outfile5 --sizename \"'-Log10RawP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig2 --top $topnum --sortby $sortby");
+print LOG "$rscript $gs_dotplot --size $outfile5 --sizename \"'-Log10RawP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig2 --top $topnum --sortby $sortby\n";
+
 
 close LOG;
 
