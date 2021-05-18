@@ -52,6 +52,7 @@ Mandatory Parameters:
 
     --qmethod         Multiple testing correction method [BH]
     --qcutoff         Corrected P cutoff [0.05]
+    --top             No. of top terms to show in barplot [20]
 	
     --verbose|-v      Verbose
 	
@@ -85,6 +86,7 @@ my $pmethod="fisher";
 my $qmethod="BH";
 my $alternative="greater"; #greater, less
 my $qcutoff=0.05;
+my $topnum=20;
 my $bkmodel="total"; #total, selected
 my $sortby="pvalue"; #pvalue, depth, name
 
@@ -104,6 +106,7 @@ GetOptions(
 	"qcutoff=f"=>\$qcutoff,
 	"alternative=s"=>\$alternative,
 	"background|b=s"=>\$bkfile,
+	"top=s"=>\$topnum,
 	"sort=s"=> \$sortby,
 	"out|o=s"=>\$outfolder,
 	"verbose"=>\$verbose,
@@ -570,11 +573,11 @@ foreach my $exp_id (@final_comparison_names) {
 	##unlink($tempfile); #masked for test
 	
 	#plto bar plot. Top 20 and All sigs
-	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top20.png --top 20");
-	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top20.png --top 20\n";
+	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top20.png --top $topnum --siglevel $qcutoff");
+	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top20.png --top $topnum --siglevel $qcutoff\n";
 
-	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all.png --top all");
-	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all.png --top all\n";
+	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all.png --top all --siglevel $qcutoff");
+	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all.png --top all --siglevel $qcutoff\n";
 }
 
 

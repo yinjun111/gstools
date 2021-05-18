@@ -44,6 +44,7 @@ Mandatory Parameters:
 
     --top             No. of top terms to show in figures [20]
     --sortby          Column name used to sort the top terms, or averge of all columns [avg]
+    --qcutoff         Corrected P cutoff [0.05]
 	
     --out|-o          Output folder
 	
@@ -51,7 +52,7 @@ Mandatory Parameters:
 	
 	
     #Parallel computing controls
-    --task            Number of tasks to be paralleled. By default 7 tasks. [7]
+    --task            Number of tasks to be paralleled. By default 20 tasks. [20]
     --ncpus           No. of cpus for each task [2]
     --mem|-m          Memory usage for each process, e.g. 100mb, 100gb
 	
@@ -79,9 +80,10 @@ my $comparisons;
 my $outputfolder;
 my $topnum=20;
 my $sortby="avg";
+my $qcutoff=0.05;
 my $dev=0;
 
-my $task=7;
+my $task=20;
 my $ncpus=2;
 my $mem;
 my $runmode="none";
@@ -96,6 +98,7 @@ GetOptions(
 	"comparisons=s" => \$comparisons,
 	"top=s"=>\$topnum,	
 	"sortby=s" => \$sortby,
+	"qcutoff=f"=>\$qcutoff,
 	"out|o=s"=>\$outputfolder,
 
 	"task=s" => \$task,
@@ -312,7 +315,7 @@ close IN;
 open(S1,">$scriptfile1") || die $!;
 foreach my $dbfile (sort keys %dbfiles) {
 	#both
-	print S1 "perl $gs_fisher -i $newsigfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
+	print S1 "perl $gs_fisher -i $newsigfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile --top $topnum --siglevel $qcutoff -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
 	
 	if(@selcomparisons) {
 		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --comparisons $comparisons --top $topnum --sortby $sortby",print_dev($dev,";\n");
@@ -320,32 +323,6 @@ foreach my $dbfile (sort keys %dbfiles) {
 	else {
 		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --top $topnum --sortby $sortby",print_dev($dev,";\n");
 	}
-	
-	#no need for updown after z-score is calculated
-	#updown
-	#print S1 "perl $gs_fisher -i $newsigfile -t matrix -c updown -o $outputfolder/$dbfiles{$dbfile}_updown -d $dbfile -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
-	
-	#if($sortby eq "avg") {
-	#	if(@selcomparisons) {
-	#		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary --comparisons ",join(",",@selcomparisons_updown)," --top $topnum --sortby $sortby",print_dev($dev,";\n");
-	#	}
-	#	else {
-	#		#
-	#		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary --top ",int($topnum/2)," --sortby #$sortby",print_dev($dev,";\n");	
-	#	}
-	#}
-	#else {
-	#	if(@selcomparisons) {
-	#		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary_sortbyup --comparisons #",join(",",@selcomparisons_updown)," --top ",int($topnum/2)," --sortby $sortby\_up",print_dev($dev,";");
-	#		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary_sortbydown --comparisons #",join(",",@selcomparisons_updown)," --top ",int($topnum/2)," --sortby $sortby\_down",print_dev($dev,";\n");			
-	#	}
-	#	else {
-	#		#
-	#		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary_sortbyup --top ",int($topnum/2)," --sortby #$sortby\_up",print_dev($dev,";");
-	#		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile}_updown -o $outputfolder/$dbfiles{$dbfile}_updown_summary_sortbydown --top ",int($topnum/2)," #--sortby $sortby\_down",print_dev($dev,";\n");		
-	#	}	
-	#}
-
 }
 close S1;
 

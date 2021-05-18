@@ -76,7 +76,7 @@ topnum.q=max(min(topnum,sum(data.q>-log10(siglevel))),5)
 #Function
 #####
 
-gs_bar<-function(z,p,gs,zname,pname,siglevel=0.05) {
+gs_bar<-function(z,p,gs,zname,pname,signame="p",siglevel=0.05) {
 
 	#create data frame
 	
@@ -91,7 +91,7 @@ gs_bar<-function(z,p,gs,zname,pname,siglevel=0.05) {
 	zname.rev<-paste("`",zname,"`",sep="")
 	pname.rev<-paste("`",pname,"`",sep="")
 
-	plot1<-ggplot(data.df, aes_string(x="`Gene Set`", y=pname.rev, fill=zname.rev)) + geom_bar(stat='identity')+theme_classic() +scale_fill_gradient2(low = "blue",  mid="grey",high = "red", space = "Lab", limit = c(-4, 4),oob=squish) + coord_flip()+geom_hline(yintercept = -log10(siglevel), linetype="dashed",color="black") + annotate(geom="text", x=1, y=-log10(0.05), label=paste("p<",siglevel,sep=""),color="black",size=4,hjust = 0) +theme(axis.text.x = element_text(angle = 0,size = 12 ),axis.text.y = element_text(angle = 0,size = 12 ))
+	plot1<-ggplot(data.df, aes_string(x="`Gene Set`", y=pname.rev, fill=zname.rev)) + geom_bar(stat='identity')+theme_classic() +scale_fill_gradient2(low = "blue",  mid="grey",high = "red", space = "Lab", limit = c(-4, 4),oob=squish) + coord_flip()+geom_hline(yintercept = -log10(siglevel), linetype="dashed",color="black") + annotate(geom="text", x=1, y=-log10(0.05), label=paste(signame,"<",siglevel,sep=""),color="black",size=4,hjust = 0) +theme(axis.text.x = element_text(angle = 0,size = 12 ),axis.text.y = element_text(angle = 0,size = 12 ))
                                            
 	print(plot1)  
 }
@@ -105,7 +105,7 @@ cat("Generating ",figure1,"\n")
 
 CairoPNG(file=figure1,res = 300,width = 3.5+floor(max(nchar(rownames(data)[1:topnum.q])/10)),height = topnum.q*0.3,units = "in")
 
-gs_bar(z=data.z[1:topnum.q],p=data.q[1:topnum.q],gs=rownames(data)[1:topnum.q],zname="ZScore",pname="-Log10BHP",siglevel=siglevel)
+gs_bar(z=data.z[1:topnum.q],p=data.q[1:topnum.q],gs=rownames(data)[1:topnum.q],zname="ZScore",pname="-Log10BHP",siglevel=siglevel,signame="BHP")
 
 dev.off()
 
@@ -118,6 +118,6 @@ cat("Generating ",figure2,"\n")
 
 CairoPNG(file=figure2,res = 300,width = 3.5+floor(max(nchar(rownames(data)[1:topnum.p])/10)),height = topnum.p*0.3,units = "in")
 
-gs_bar(z=data.z[1:topnum.p],p=data.p[1:topnum.p],gs=rownames(data)[1:topnum.p],zname="ZScore",pname="-Log10RawP",siglevel=siglevel)
+gs_bar(z=data.z[1:topnum.p],p=data.p[1:topnum.p],gs=rownames(data)[1:topnum.p],zname="ZScore",pname="-Log10RawP",siglevel=siglevel,signame="P")
 
 dev.off()
