@@ -26,8 +26,7 @@ parser <- add_argument(parser, arg="--siglevel",short="-s", type="character", de
 
 args = parse_args(parser)
 
-print(args)
-
+#print(args)
 
 ######
 #Drawing function
@@ -42,7 +41,7 @@ library(scales)
 #cols <- brewer.pal(9, "Reds")
 #pal <- colorRampPalette(cols)
 
-topnum<-as.numeric(args$top)
+
 siglevel<-as.numeric(args$siglevel)
 
 data<-read.table(args$"in",header=T,row.names=1,sep="\t",quote="",comment.char="")
@@ -63,6 +62,12 @@ data.q[is.na(data.q)]<-1
 data.q<- -log10(data.q+1e-32) #conversion
 
 #decide top number. at least 5 are shown
+if(args$top =="all") {
+	topnum=nrow(data)
+} else {
+	topnum<-as.numeric(args$top)
+}
+
 topnum.p=max(min(topnum,sum(data.p>-log10(siglevel))),5)
 topnum.q=max(min(topnum,sum(data.q>-log10(siglevel))),5)
 
@@ -94,6 +99,8 @@ gs_bar<-function(z,p,gs,zname,pname,siglevel=0.05) {
 #figure output, qvalue
 figure1=sub(".png$","_bhp.png",args$out,perl=T)
 
+cat("Generating ",figure1,"\n")
+
 #auto calculate length
 
 CairoPNG(file=figure1,res = 300,width = 3.5+floor(max(nchar(rownames(data)[1:topnum.q])/10)),height = topnum.q*0.3,units = "in")
@@ -104,7 +111,10 @@ dev.off()
 
 
 #figure output, pvalue
+
 figure2=sub(".png$","_rawp.png",args$out,perl=T)
+
+cat("Generating ",figure2,"\n")
 
 CairoPNG(file=figure2,res = 300,width = 3.5+floor(max(nchar(rownames(data)[1:topnum.p])/10)),height = topnum.p*0.3,units = "in")
 

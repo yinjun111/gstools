@@ -12,7 +12,7 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.6";
+my $version="0.7";
 
 #v0.2, add --type to accept different input types
 #v0.3, add excel output
@@ -20,6 +20,7 @@ my $version="0.6";
 #v0.41, AWS
 #v0.5, add --cate for directional changes
 #v0.6, add zscore calculation
+#v0.7, add barplot
 
 my $usage="
 
@@ -136,6 +137,16 @@ my $mergefiles="$omictoolsfolder/mergefiles/mergefiles_caller.pl";
 my $text2excel="perl $omictoolsfolder/text2excel/text2excel.pl";
 
 
+#gstools
+my $gstoolsfolder="/apps/gstools/";
+
+#adding --dev switch for better development process
+if($dev) {
+	$gstoolsfolder="/home/centos/Pipeline/gstools/";
+}
+
+my $gs_barplot="$gstoolsfolder/gs_barplot.R";
+
 
 ########
 #Program running
@@ -157,11 +168,10 @@ $outfolder=abs_path($outfolder);
 my $outfoldername=basename($outfolder);
 
 #the order of dirname and abs_path is important
-my $outfile = abs_path($outfolder)."/".$outfoldername.".xlsx";
+my $outfile = "$outfolder/$outfoldername.xlsx";
 
 
-my $logfile=$outfile;
-$logfile=~s/.xlsx/_gs-fisher_run.log/;
+my $logfile="$outfolder/gs-fisher_run.log";
 
 
 #write log file
@@ -558,8 +568,14 @@ foreach my $exp_id (@final_comparison_names) {
 	}
 	
 	##unlink($tempfile); #masked for test
+	
+	#plto bar plot. Top 20 and All sigs
+	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top20.png --top 20");
+	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top20.png --top 20\n";
+
+	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all.png --top all");
+	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all.png --top all\n";
 }
-#}
 
 
 #Merge files into excel file
@@ -570,6 +586,8 @@ print STDERR "Converting outputs to excel file:$exceloutfile.\n\n";
 print LOG "Converting outputs to excel file:$exceloutfile.\n\n";
 
 system("$text2excel -i ".join(",",@outfiles)." -n ".join(",",@outfilenames)." -o $exceloutfile --theme theme2");
+print LOG "$text2excel -i ".join(",",@outfiles)." -n ".join(",",@outfilenames)." -o $exceloutfile --theme theme2\n";
+
 
 close LOG;
 
