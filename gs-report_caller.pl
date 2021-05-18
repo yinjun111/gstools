@@ -14,7 +14,10 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.1";
+my $version="0.2";
+
+#v0.2, changed to matrix input
+
 
 my $usage="
 
@@ -25,9 +28,9 @@ Usage: gstools gs-report [parameters]
 Description: Read rnaseq-summary folder and generate gs-fisher results and summary reports.
 
 Mandatory Parameters:
-    --in|-i           rnaseq-summary folder
-    --matrix|-m       Alternative input is a matrix with each row as a gene and each 
+    --in|-i           a matrix with each row as a gene and each 
                          column as a comparison. 1 and -1 as up/down-regulated genes
+                         E.g. rnaseq-summary_folder/rnaseq-summary_GeneDESigs.txt
 
     --tx|-t           Transcriptome
                         Current support Human.B38.Ensembl88, Mouse.B38.Ensembl88
@@ -43,6 +46,14 @@ Mandatory Parameters:
     --sortby          Column name used to sort the top terms, or averge of all columns [avg]
 	
     --out|-o          Output folder
+	
+    --runmode|-r      Where to run the scripts, local, cluster or none [none]
+	
+	
+    #Parallel computing controls
+    --task            Number of tasks to be paralleled. By default 7 tasks. [7]
+    --ncpus           No. of cpus for each task [2]
+    --mem|-m          Memory usage for each process, e.g. 100mb, 100gb
 	
 ";
 
@@ -61,7 +72,7 @@ my $params=join(" ",@ARGV);
 #Parameters
 ########
 	
-my $inputfolder;
+my $inputfile;
 my $tx;
 my $configfile;
 my $comparisons;
@@ -69,18 +80,29 @@ my $outputfolder;
 my $topnum=20;
 my $sortby="avg";
 my $dev=0;
+
+my $task=7;
+my $ncpus=2;
+my $mem;
+my $runmode="none";
 	
 my $verbose=1;
 
 
 GetOptions(
-	"input|i=s" => \$inputfolder,
+	"input|i=s" => \$inputfile,
 	"tx|t=s" => \$tx,
 	"config|c=s" => \$configfile,
 	"comparisons=s" => \$comparisons,
 	"top=s"=>\$topnum,	
 	"sortby=s" => \$sortby,
 	"out|o=s"=>\$outputfolder,
+
+	"task=s" => \$task,
+	"ncpus=s" => \$ncpus,
+	"mem=s" => \$mem,	
+
+	"runmode|r=s" => \$runmode,			
 	"dev" => \$dev,	
 );
 
@@ -89,9 +111,21 @@ GetOptions(
 #Tools needed
 ####
 
-#omictools
-my $mergefiles="/apps/omictools/mergefiles/mergefiles_caller.pl";
-my $text2excel="perl /apps/omictools/text2excel/text2excel.pl";
+
+my $omictoolsfolder="/apps/omictools/";
+
+#adding --dev switch for better development process
+#if($dev) {
+#	$omictoolsfolder="/home/jyin/Projects/Pipeline/omictools/";
+#}
+#else {
+#	#the tools called will be within the same folder of the script
+#	$omictoolsfolder=get_parent_folder(abs_path(dirname($0)));
+#}
+
+my $mergefiles="$omictoolsfolder/mergefiles/mergefiles_caller.pl";
+my $parallel_job="$omictoolsfolder/parallel-job/parallel-job_caller.pl";
+my $text2excel="$omictoolsfolder/text2excel/text2excel.pl";
 
 
 #gstools
@@ -115,8 +149,10 @@ if(!-e $outputfolder) {
 $outputfolder = abs_path($outputfolder);
 my $outputfoldername = basename($outputfolder);
 
-$inputfolder = abs_path($inputfolder);
+$inputfile = abs_path($inputfile);
 
+my $scriptlocalrun="$outputfolder/gs-report_local_submission.sh";
+my $scriptclusterrun="$outputfolder/gs-report_cluster_submission.sh";
 
 my $scriptfolder="$outputfolder/scripts";
 if(!-e $scriptfolder) {
@@ -132,6 +168,7 @@ my $logfile="$outputfolder/gs-report_run.log";
 open(LOG, ">$logfile") || die "Error writing into $logfile. $!";
 
 my $now=current_time();
+my $timestamp=build_timestamp($now,"long");
 
 print LOG "perl $0 $params\n\n";
 print LOG "Start time: $now\n\n";
@@ -183,14 +220,14 @@ unless(defined $configfile && length($configfile) >0) {
 
 #check rnaseq-summary folder
 
-if(!-e "$inputfolder/rnaseq-summary_GeneDESigs.txt") {
-	print STDERR "ERROR:Can't read $inputfolder/rnaseq-summary_GeneDESigs.txt. $!\n";
-	print LOG "ERROR:Can't read $inputfolder/rnaseq-summary_GeneDESigs.txt. $!\n";
+if(!-e $inputfile) {
+	print STDERR "ERROR:Can't read $inputfile. $!\n";
+	print LOG "ERROR:Can't read $inputfile. $!\n";
 	exit;
 }
 
-print STDERR "$inputfolder/rnaseq-summary_GeneDESigs.txt is analyzed by gs-report.\n\n";
-print LOG "$inputfolder/rnaseq-summary_GeneDESigs.txt is analyzed by gs-report.\n\n";
+print STDERR "$inputfile is analyzed by gs-report.\n\n";
+print LOG "$inputfile is analyzed by gs-report.\n\n";
 
 
 #generate new DE sigs based on --comparisons
@@ -201,18 +238,18 @@ my %selcomparisons_hash;
 if(defined $comparisons && length($comparisons)>0) { 
 	#keep original order
 	@selcomparisons=split(",",$comparisons);
-	@selcomparisons_updown=((map {$_."_up"} @selcomparisons),(map {$_."_down"} @selcomparisons));
+	#@selcomparisons_updown=((map {$_."_up"} @selcomparisons),(map {$_."_down"} @selcomparisons));
 	%selcomparisons_hash=map {$_,1} @selcomparisons;
 }
 
-my $newsigfile="$outputfolder/rnaseq-summary_GeneDESigs_selected.txt";
+my $newsigfile="$outputfolder/gs-report_inputs.txt";
 
 my %comp2col;
 my @selcols;
 
 if(@selcomparisons) {
 	open(OUT,">$newsigfile") || die $!;
-	open(IN,"$inputfolder/rnaseq-summary_GeneDESigs.txt") || die $!;
+	open(IN,"$inputfile") || die $!;
 	while(<IN>) {
 		tr/\r\n//d;
 		my @array=split/\t/;
@@ -229,8 +266,8 @@ if(@selcomparisons) {
 					print LOG $comp," is identifed at $comp2col{$comp}(th) column.\n";
 				}
 				else {
-					print STDERR "ERROR:$comp is not defined in $inputfolder/rnaseq-summary_GeneDESigs.txt\n\n";
-					print LOG "ERROR:$comp is not defined in $inputfolder/rnaseq-summary_GeneDESigs.txt\n\n";
+					print STDERR "ERROR:$comp is not defined in $inputfile\n\n";
+					print LOG "ERROR:$comp is not defined in $inputfile\n\n";
 					exit;
 				}
 			}
@@ -247,7 +284,7 @@ if(@selcomparisons) {
 
 }
 else {
-	system("cp $inputfolder/rnaseq-summary_GeneDESigs.txt $newsigfile");
+	system("cp $inputfile $newsigfile");
 }
 
 
@@ -312,6 +349,94 @@ foreach my $dbfile (sort keys %dbfiles) {
 }
 close S1;
 
+
+
+
+#######
+#Run mode
+#######
+
+open(LOUT,">$scriptlocalrun") || die "ERROR:can't write to $scriptlocalrun. $!";
+open(SOUT,">$scriptclusterrun") || die "ERROR:can't write to $scriptclusterrun. $!";
+
+
+my @scripts_all=($scriptfile1);
+
+
+#print out command for local and cluster parallel runs
+my $jobnumber=0;
+my $jobname="gs-report-$timestamp";
+
+if($task eq "auto") {
+	$jobnumber=0;
+}
+else {
+	$jobnumber=$task;
+}
+
+my @local_runs;
+my @script_names;
+
+foreach my $script (@scripts_all) {
+	push @local_runs,"cat $script | parallel -j $jobnumber";
+
+	if($script=~/([^\/]+)\.\w+$/) {
+		#push @script_names,$1."_".basename_short($outputfolder);
+		push @script_names,$1;
+	}
+}
+
+my $localcommand="screen -S $jobname -dm bash -c \"source ~/.bashrc;".join(";",@local_runs).";\"";
+
+print LOUT $localcommand,"\n";
+close LOUT;
+
+#print out command for cluster parallel runs
+
+my $clustercommand="perl $parallel_job -i ".join(",", @scripts_all)." -o $scriptfolder -n ".join(",",@script_names)." --tandem -t $task --ncpus $ncpus -r ";
+
+if(defined $mem && length($mem)>0) {
+	$clustercommand.=" -m $mem";
+}
+
+print SOUT $clustercommand,"\n";
+close SOUT;
+
+
+
+if($runmode eq "none") {
+	print STDERR "\nTo run locally, in shell type: sh $scriptlocalrun\n";
+	print STDERR "To run in cluster, in shell type: sh $scriptclusterrun\n";
+	
+	print LOG "\nTo run locally, in shell type: sh $scriptlocalrun\n";
+	print LOG "To run in cluster, in shell type: sh $scriptclusterrun\n";
+}
+elsif($runmode eq "local") {
+	#local mode
+	#implemented for Falco
+	
+	system("sh $scriptlocalrun");
+	print LOG "sh $scriptlocalrun;\n\n";
+
+	print STDERR "Starting local paralleled processing using $jobnumber tasks. To monitor process, use \"screen -r $jobname\".\n\n";
+	print LOG "Starting local paralleled processing using $jobnumber tasks. To monitor process, use \"screen -r $jobname\".\n\n";
+	
+}
+elsif($runmode eq "cluster") {
+	#cluster mode
+	#implement for Firefly
+	
+	system("sh $scriptclusterrun");
+	print LOG "sh $scriptclusterrun;\n\n";
+
+	print STDERR "Starting cluster paralleled processing using $jobnumber tasks. To monitor process, use \"qstat\".\n\n";
+
+}
+
+close LOG;
+
+
+
 ########
 #Functions
 ########
@@ -319,6 +444,20 @@ close S1;
 sub current_time {
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 	my $now = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year+1900, $mon+1, $mday, $hour, $min, $sec);
+	return $now;
+}
+
+sub build_timestamp {
+	my ($now,$opt)=@_;
+	
+	if($opt eq "long") {
+		$now=~tr/ /_/;
+		$now=~tr/://d;
+	}
+	else {
+		$now=substr($now,0,10);
+	}
+	
 	return $now;
 }
 

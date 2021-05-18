@@ -247,7 +247,8 @@ while(<ANNO>) {
 		#genes in the annotation
 		$gene_used{$array[0]}++;
 		
-		if(defined $array[1] && $array[1] ne " ") {
+		#add length>0
+		if(defined $array[1] && length($array[1]) >0 && $array[1] ne " ") {
 	
 			foreach my $gs (split(";",$array[1])) {
 				if($gs eq "-" || $gs eq " ") {

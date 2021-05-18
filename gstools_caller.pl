@@ -4,10 +4,10 @@ use Getopt::Long;
 use File::Basename;
 use Cwd qw(abs_path);
 
-my $version="0.1";
+my $version="0.2";
 
 #v0.1
-
+#v0.2, added z-score calculation and new dot plot
 
 my $usage="
 
