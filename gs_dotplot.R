@@ -92,7 +92,12 @@ if(args$sortby=="avg") {
 	data.size.top<-data.size[order(data.size[,args$sortby],decreasing = T)[1:topnum],]
 }
 
-rownames(data.color.top)<-make.names(substr(rownames(data.color.top),1,50),unique=T)
+#convert to the same format
+data.color.top.newnames<-make.names(substr(rownames(data.color.top),1,50),unique=T)
+data.color.top.newnames<-gsub("(\\D)(\\D+)", "\\U\\1\\L\\2", data.color.top.newnames, perl = TRUE)
+
+rownames(data.color.top)<-data.color.top.newnames
+
 
 
 #df
