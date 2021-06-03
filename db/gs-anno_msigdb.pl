@@ -15,7 +15,10 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.1";
+my $version="0.1a";
+
+#0.1a, change names to first letter uppercase
+
 
 my $usage="
 
@@ -137,9 +140,20 @@ open(IN,$gmtfile) || die "ERROR:Error reading $gmtfile.$!\n";
 while(<IN>) {
 	tr/\r\n//d;
 	my @array=split/\t/;
+		
+	my $gs;
+	
+	#upper case first letter of first word #doesn't work very well
+	#if($array[0]=~/^([^_]+_)(\w)(.+)/) {
+	#	$gs=$1.uc($2).lc($3);
+	#}
+	#else {
+	#	print STDERR "WARNING:Wrong format $gs\n";
+		$gs=$array[0];
+	#}
 	
 	for(my $num=2;$num<@array;$num++) {
-		$symbol2anno{$array[$num]}{$array[0]}++;
+		$symbol2anno{$array[$num]}{$gs}++;
 	}
 }
 close IN;
