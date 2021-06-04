@@ -17,6 +17,7 @@ use File::Basename qw(basename dirname);
 my $version="0.2";
 
 #v0.2, changed to matrix input
+#v0.21, keep original order in input
 
 
 my $usage="
@@ -249,6 +250,7 @@ my $newsigfile="$outputfolder/gs-report_inputs.txt";
 
 my %comp2col;
 my @selcols;
+my @usedcomparisons;
 
 if(@selcomparisons) {
 	open(OUT,">$newsigfile") || die $!;
@@ -288,6 +290,23 @@ if(@selcomparisons) {
 }
 else {
 	system("cp $inputfile $newsigfile");
+	
+	#keep original order
+	open(IN,"$inputfile") || die $!;
+	while(<IN>) {
+		tr/\r\n//d;
+		my @array=split/\t/;
+		
+		if($_=~/^Gene/) {
+			@usedcomparisons=@array[1..$#array];
+			last;
+		}
+	}
+	close IN;
+	
+	print STDERR "No --comparisons defined. Use existing order: ",join(",",@usedcomparisons),"\n";
+	print LOG "No --comparisons defined. Use existing order: ",join(",",@usedcomparisons),"\n";
+	
 }
 
 
@@ -321,7 +340,7 @@ foreach my $dbfile (sort keys %dbfiles) {
 		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --comparisons $comparisons --top $topnum --sortby $sortby",print_dev($dev,";\n");
 	}
 	else {
-		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --top $topnum --sortby $sortby",print_dev($dev,";\n");
+		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --comparisons ",join(",",@usedcomparisons)," --top $topnum --sortby $sortby",print_dev($dev,";\n");
 	}
 }
 close S1;
