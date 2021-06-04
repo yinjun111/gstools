@@ -14,7 +14,7 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.2";
+my $version="0.21";
 
 #v0.2, changed to matrix input
 #v0.21, keep original order in input
