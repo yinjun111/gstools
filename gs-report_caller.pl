@@ -14,11 +14,12 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.22";
+my $version="0.23";
 
 #v0.2, changed to matrix input
 #v0.21, keep original order in input
 #v0.22, add background file
+#v0.23, add rat anno
 
 my $usage="
 
