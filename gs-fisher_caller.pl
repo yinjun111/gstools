@@ -12,7 +12,7 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.7";
+my $version="0.8";
 
 #v0.2, add --type to accept different input types
 #v0.3, add excel output
@@ -21,6 +21,8 @@ my $version="0.7";
 #v0.5, add --cate for directional changes
 #v0.6, add zscore calculation
 #v0.7, add barplot
+#v0.8, redefined N (bk)
+
 
 my $usage="
 
@@ -211,11 +213,13 @@ my %cates=map {$_,1} split(",",$cate);
 my %selgenes;
 my %gene_id;
 my %gs2gene;
-my %gene_used;
+
 
 #####
 #BK file
 #####
+
+#if bk file defined, use bk file. Otherwise, all the genes in the db.
 
 my $blinenum=0;
 my %bkgenes;
@@ -227,13 +231,13 @@ if(defined $bkfile && length($bkfile)>0) {
 		unless($blinenum==0) {
 			my @array=split/\t/;
 			$bkgenes{$array[0]}++;
-			$gene_used{$array[0]}++;
+			#$gene_used{$array[0]}++;
 		}
 		$blinenum++;
 	}
 	close IN;
 	
-	print STDERR scalar(keys %gene_used)," features found in the $bkfile file.\n" if $verbose;
+	print STDERR scalar(keys %bkgenes)," features found in the $bkfile file.\n" if $verbose;
 }
 else {
 	print STDERR "No background file defined.\n" if $verbose;
@@ -242,6 +246,7 @@ else {
 #########
 #GS db File
 #########
+my %gene_used;
 
 my $alinenum=0;
 open(ANNO,$dbfile) || die "ERROR:Can't read $dbfile.$!\n";
@@ -251,13 +256,14 @@ while(<ANNO>) {
 	unless($alinenum==0) {
 		my @array=split/\t/;
 		
+		#bk file defined, use intersection of bk and db
 		if(defined $bkfile && length($bkfile)>0) {
 			unless(defined $bkgenes{$array[0]}) {
 				next;
 			}
 		}
 		
-		#genes in the annotation
+		#genes in the annotation, by intersection with bk
 		$gene_used{$array[0]}++;
 		
 		#add length>0
@@ -278,10 +284,17 @@ while(<ANNO>) {
 }
 close ANNO;
 
+#bk genes should be the intersection of bk file and db file
+#to implement that use 
+%bkgenes=%gene_used;
+print STDERR scalar(keys %bkgenes)," features used as the background.\n" if $verbose;
 
-unless(defined $bkfile && length($bkfile)>0) {
-	%bkgenes=%gene_used; #use all genes in the anno as bk
-}
+#previously implementation, if bk defined, use bk, regardless of whether it has annotation or not
+#unless(defined $bkfile && length($bkfile)>0) {
+#	%bkgenes=%gene_used; #use all genes in the anno as bk
+#}
+
+
 
 #########
 #Annotation File
@@ -339,7 +352,7 @@ if($type eq "list") {
 			$num++;
 			
 			if(defined $id && length($id)>0 && $id ne " ") {
-				if(defined $gene_used{$id}) {
+				if(defined $bkgenes{$id}) {
 					$selgenes{$comparison_names[$num]}{$id}=1;
 				}
 			}
@@ -358,24 +371,27 @@ elsif($type eq "matrix") {
 			@comparison_names=@array[1..$#array];
 		}
 		else {
-			for(my $num=1;$num<@array;$num++) {
-				if(defined $array[$num] && length($array[$num])>0 && $array[$num] ne "NA" && $array[$num] ne " " && $array[$num] ne "0") {
-					if(defined $cates{"both"}) {
-						if($array[$num]>0) {
-							$selgenes{$comparison_names[$num-1]}{$array[0]}=1; #in order to make it work, it has to be -1/1
+			#only count genes in the bk
+			if (defined $bkgenes{$array[0]}) {			
+				for(my $num=1;$num<@array;$num++) {				
+					if(defined $array[$num] && length($array[$num])>0 && $array[$num] ne "NA" && $array[$num] ne " " && $array[$num] ne "0") {
+						if(defined $cates{"both"}) {
+							if($array[$num]>0) {
+								$selgenes{$comparison_names[$num-1]}{$array[0]}=1; #in order to make it work, it has to be -1/1
+							}
+							else {
+								$selgenes{$comparison_names[$num-1]}{$array[0]}=-1; #in order to make it work, it has to be -1/1
+							}
 						}
-						else {
-							$selgenes{$comparison_names[$num-1]}{$array[0]}=-1; #in order to make it work, it has to be -1/1
-						}
-					}
-					
-					#probably no need for this anymmore
-					if(defined $cates{"updown"}) {
-						if($array[$num]==1) {
-							$selgenes{$comparison_names[$num-1]."-up"}{$array[0]}=1;
-						}
-						elsif($array[$num]==-1) {
-							$selgenes{$comparison_names[$num-1]."-down"}{$array[0]}=-1;
+						
+						#probably no need for this anymmore
+						if(defined $cates{"updown"}) {
+							if($array[$num]==1) {
+								$selgenes{$comparison_names[$num-1]."-up"}{$array[0]}=1;
+							}
+							elsif($array[$num]==-1) {
+								$selgenes{$comparison_names[$num-1]."-down"}{$array[0]}=-1;
+							}
 						}
 					}
 				}
@@ -407,27 +423,31 @@ elsif($type eq "de") {
 		}
 		else {
 			my $num=5;
-			#use both for now #non-0
-			if(defined $cates{"both"}) {
-				if(defined $array[$num] && length($array[$num])>0 && $array[$num] ne "NA" && $array[$num] ne " " && $array[$num] ne "0") {
-					if($array[$num]>0) {
-						$selgenes{$comparison_names[0]}{$array[0]}=1;
-					}
-					else {
-						$selgenes{$comparison_names[0]}{$array[0]}=-1;
-					}
-				}
-			}
 			
-			#probably no need for this anymmore
-			if(defined $cates{"updown"}) {
-				if($array[$num]==1) {
-					$selgenes{$comparison_names[$num-1]."-up"}{$array[0]}=1;
+			if (defined $bkgenes{$array[0]}) {
+				
+				#use both for now #non-0
+				if(defined $cates{"both"}) {
+					if(defined $array[$num] && length($array[$num])>0 && $array[$num] ne "NA" && $array[$num] ne " " && $array[$num] ne "0") {
+						if($array[$num]>0) {
+							$selgenes{$comparison_names[0]}{$array[0]}=1;
+						}
+						else {
+							$selgenes{$comparison_names[0]}{$array[0]}=-1;
+						}
+					}
 				}
-				elsif($array[$num]==-1) {
-					$selgenes{$comparison_names[$num-1]."-down"}{$array[0]}=-1;
+				
+				#probably no need for this anymmore
+				if(defined $cates{"updown"}) {
+					if($array[$num]==1) {
+						$selgenes{$comparison_names[$num-1]."-up"}{$array[0]}=1;
+					}
+					elsif($array[$num]==-1) {
+						$selgenes{$comparison_names[$num-1]."-down"}{$array[0]}=-1;
+					}
 				}
-			}			
+			}				
 		}
 		$ilinenum++;
 	}
@@ -476,7 +496,8 @@ foreach my $exp_id (@final_comparison_names) {
 	
 	foreach my $gs (sort keys %gs2gene) {
 		foreach my $id (sort keys %{$selgenes{$exp_id}}) {
-			next unless defined $gene_used{$id};
+
+			#next unless defined $bkgenes{$id};
 			
 			$changed_gene{$id}++;
 			
