@@ -19,8 +19,18 @@ Usage: gstools [tool] [parameters]
 Parameters:
 
     gs-report    Automatically generate Gene Set Analyses results for rnaseq-summary
+
     gs-fisher    Perform Fisher's Exact Test for gene lists
     gs-fisher-summary   Summarize gs-fisher results
+
+    gsea-gen     Run GSEA analysis
+    gsea-gen-summary   Summarize GSEA analysis results
+
+    ipa-gen      Generate files for IPA analysis (not implemented)
+    ipa-summary  Summary IPA analysis results
+
+    metascape-gen      Generate files for Metascape analysis (not implemented)
+
     list-dbs     List current databases for gs-fisher
 
 ";
@@ -66,16 +76,23 @@ else {
 #####
 
 
-my $gs_report="perl $gstoolsfolder/gs-report_caller.pl";
-my $gs_fisher="perl $gstoolsfolder/gs-fisher_caller.pl";
-my $gs_fisher_summary="perl $gstoolsfolder/gs-fisher_summary.pl";
-my $list_dbs="sh $gstoolsfolder/list-dbs.sh";
+my $gs_report="perl $gstoolsfolder/gs-report/gs-report_caller.pl";
+my $gs_fisher="perl $gstoolsfolder/gs-fisher/gs-fisher_caller.pl";
+my $gs_fisher_summary="perl $gstoolsfolder/gs-fisher/gs-fisher_summary.pl";
+my $list_dbs="sh $gstoolsfolder/misc/list-dbs.sh";
 
+my $gsea_gen="perl $gstoolsfolder/gsea-gen/gsea-gen_caller.pl";
+my $gsea_gen_summary="perl $gstoolsfolder/gsea-gen-summary/gsea-gen-summary.pl";
+
+my $ipa_summary="perl $gstoolsfolder/ipa-summary/ipa-summary.pl";
 
 my %commands2program=(
     "gs-report"=>$gs_report,
     "gs-fisher"=>$gs_fisher,
 	"gs-fisher-summary"=>$gs_fisher_summary,
+	"gsea-gen"=>$gsea_gen,
+	"gsea-gen-summary"=>$gsea_gen_summary,
+	"ipa-summary"=>$ipa_summary,
 	"list-dbs"=>$list_dbs,
 );
 
