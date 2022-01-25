@@ -14,11 +14,11 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.21";
+my $version="0.22";
 
 #v0.2, changed to matrix input
 #v0.21, keep original order in input
-
+#v0.22, add background file
 
 my $usage="
 
@@ -34,11 +34,14 @@ Mandatory Parameters:
                          E.g. rnaseq-summary_folder/rnaseq-summary_GeneDESigs.txt
 
     --tx|-t           Transcriptome
-                        Current support Human.B38.Ensembl88, Mouse.B38.Ensembl88
+                        Currently support Human.B38.Ensembl88,Mouse.B38.Ensembl88,Rat.Rn6.Ensembl88
 
     --config|-c       Configuration file for gstools-db, by default
                         Human: /data/jyin/Databases/gstools-db/gstools-db-config_human.txt
                         Mouse: /data/jyin/Databases/gstools-db/gstools-db-config_mouse.txt
+                        Rat: /data/jyin/Databases/gstools-db/gstools-db-config_rat.txt
+
+    --backgroud|-b    Background file (optional)
 
     --comparisons     (Optional) Name of comparisons to be tested in gs analyses
                          By default, all the comparisons in the rnaseq-summary folder
@@ -83,6 +86,7 @@ my $topnum=20;
 my $sortby="avg";
 my $qcutoff=0.05;
 my $dev=0;
+my $bkfile;
 
 my $task=20;
 my $ncpus=2;
@@ -101,7 +105,8 @@ GetOptions(
 	"sortby=s" => \$sortby,
 	"qcutoff=f"=>\$qcutoff,
 	"out|o=s"=>\$outputfolder,
-
+	"background|b=s"=>\$bkfile,
+	
 	"task=s" => \$task,
 	"ncpus=s" => \$ncpus,
 	"mem=s" => \$mem,	
@@ -193,6 +198,7 @@ print STDERR "\ngstools gs-report $version running ...\n\n" if $verbose;
 my %tx2configfile=(
 	"Human.B38.Ensembl88"=>"/data/jyin/Databases/gstools-db/gstools-db-config_human.txt",
 	"Mouse.B38.Ensembl88"=>"/data/jyin/Databases/gstools-db/gstools-db-config_mouse.txt",
+	"Rat.Rn6.Ensembl88"=>"/data/jyin/Databases/gstools-db/gstools-db-config_rat.txt",
 );
 
 
@@ -214,7 +220,15 @@ my %tx2ref=(
 		"gtf"=>"/data/jyin/Databases/Genomes/Mouse/mm10/Mus_musculus.GRCm38.88_ucsc.gtf",
 		"homeranno"=>"/data/jyin/Databases/Genomes/Mouse/mm10/Mus_musculus.GRCm38.88_ucsc_homeranno.txt",
 		"geneanno"=>"/data/jyin/Databases/Genomes/Mouse/mm10/Mus_musculus.GRCm38.88_ucsc_gene_annocombo.txt",
-		"txanno"=>"/data/jyin/Databases/Genomes/Mouse/mm10/Mus_musculus.GRCm38.88_ucsc_tx_annocombo.txt"}
+		"txanno"=>"/data/jyin/Databases/Genomes/Mouse/mm10/Mus_musculus.GRCm38.88_ucsc_tx_annocombo.txt"},
+	"Rat.Rn6.Ensembl88"=>{ 
+		"star"=>"/data/jyin/Databases/Genomes/Rat/rn6/Rat.Rn6.Ensembl88_STAR",
+		"rsem"=>"/data/jyin/Databases/Genomes/Rat/rn6/Rat.Rn6.Ensembl88_STAR/Rat_RSEM",
+		"chrsize"=>"/data/jyin/Databases/Genomes/Rat/rn6/Rat.Rn6.Ensembl88_STAR/chrNameLength.txt",
+		"fasta"=>"/data/jyin/Databases/Genomes/Rat/rn6/Rattus_norvegicus.Rnor_6.0.dna.toplevel_ucsc.fa",
+		"gtf"=>"/data/jyin/Databases/Genomes/Rat/rn6/Rattus_norvegicus.Rnor_6.0.88_ucsc.gtf",
+		"geneanno"=>"/data/jyin/Databases/Genomes/Rat/rn6/Rattus_norvegicus.Rnor_6.0.88_ucsc_gene_annocombo.txt",
+		"txanno"=>"/data/jyin/Databases/Genomes/Rat/rn6/Rattus_norvegicus.Rnor_6.0.88_ucsc_tx_annocombo.txt"}		
 );
 
 
@@ -254,7 +268,7 @@ my @usedcomparisons;
 
 if(@selcomparisons) {
 	open(OUT,">$newsigfile") || die $!;
-	open(IN,"$inputfile") || die $!;
+	open(IN,"$inputfile") || die "ERROR:$inputfile can't be read. $!";
 	while(<IN>) {
 		tr/\r\n//d;
 		my @array=split/\t/;
@@ -292,7 +306,7 @@ else {
 	system("cp $inputfile $newsigfile");
 	
 	#keep original order
-	open(IN,"$inputfile") || die $!;
+	open(IN,"$inputfile") || die "ERROR:$inputfile can't be read. $!";
 	while(<IN>) {
 		tr/\r\n//d;
 		my @array=split/\t/;
@@ -314,7 +328,7 @@ else {
 #choose db to work on
 my %dbfiles;
 
-open(IN,$configfile) || die $!;
+open(IN,$configfile) || die "ERROR:$configfile can't be read. $!";;
 while(<IN>) {
 	tr/\r\n//d;
 	next if $_=~/^Database/;
@@ -334,7 +348,12 @@ close IN;
 open(S1,">$scriptfile1") || die $!;
 foreach my $dbfile (sort keys %dbfiles) {
 	#both
-	print S1 "perl $gs_fisher -i $newsigfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile --top $topnum --qcutoff $qcutoff -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
+	if(defined $bkfile && length($bkfile)>0) {
+		print S1 "perl $gs_fisher -i $newsigfile -b $bkfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile --top $topnum --qcutoff $qcutoff -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
+	}
+	else {
+		print S1 "perl $gs_fisher -i $newsigfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile --top $topnum --qcutoff $qcutoff -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");	
+	}
 	
 	if(@selcomparisons) {
 		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --comparisons $comparisons --top $topnum --sortby $sortby",print_dev($dev,";\n");
