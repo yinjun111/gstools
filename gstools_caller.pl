@@ -82,9 +82,9 @@ my $gs_fisher_summary="perl $gstoolsfolder/gs-fisher/gs-fisher_summary.pl";
 my $list_dbs="sh $gstoolsfolder/misc/list-dbs.sh";
 
 my $gsea_gen="perl $gstoolsfolder/gsea-gen/gsea-gen_caller.pl";
-my $gsea_gen_summary="perl $gstoolsfolder/gsea-gen-summary/gsea-gen-summary.pl";
+my $gsea_gen_summary="perl $gstoolsfolder/gsea-gen/gsea-gen-summary.pl";
 
-my $ipa_summary="perl $gstoolsfolder/ipa-summary/ipa-summary.pl";
+my $ipa_summary="perl $gstoolsfolder/ipa-gen/ipa_summary.pl";
 
 my %commands2program=(
     "gs-report"=>$gs_report,

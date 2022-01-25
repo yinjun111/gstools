@@ -21,6 +21,7 @@ my $version="0.2";
 #v0.11, add heatmap generation to p/q matrix
 #v0.12, R 4.0
 #v0.2, AWS
+#v0.21, fit into gstools
 
 my $usage="
 
@@ -106,6 +107,8 @@ else {
 	$omictoolsfolder=get_parent_folder(dirname(abs_path($0)));
 }
 
+#gstools
+my $gstoolsfolder="/apps/gstools/";
 
 #adding --dev switch for better development process
 if($dev) {
@@ -124,7 +127,7 @@ my $gs_heatmap="$gstoolsfolder/plots/gs_heatmap.R"; #changed here
 
 #Create folders
 
-if(!-e $outputfolder) {
+if(!-f $outputfolder) {
 	mkdir($outputfolder);
 }
 
