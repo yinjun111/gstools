@@ -120,6 +120,9 @@ if($dev) {
 
 my $gs_fisher="perl $gstoolsfolder/gs-fisher/gs-fisher_caller.pl";
 my $gs_fisher_summary="perl $gstoolsfolder/gs-fisher/gs-fisher_summary.pl";
+my $gs_heatmap="$rscript $gstoolsfolder/plots/gs_heatmap.R";
+my $gs_dotplot="$rscript $gstoolsfolder/plots/gs_dotplot.R";
+
 
 
 ########
@@ -371,8 +374,8 @@ foreach my $outfile_sel (@outfiles_forheatmap) {
 	print STDERR "Generating heatmap for $outfile_sel.\n";
 	print LOG "Generating heatmap for $outfile_sel.\n";
 
-	system("$rscript $gs_heatmap -i $outfile_sel -o $outfilefig --top $topnum --sortby $sortby");
-	print LOG "$rscript $gs_heatmap -i $outfile_sel -o $outfilefig --top $topnum --sortby $sortby\n";
+	system("$gs_heatmap -i $outfile_sel -o $outfilefig --top $topnum --sortby $sortby");
+	print LOG "$gs_heatmap -i $outfile_sel -o $outfilefig --top $topnum --sortby $sortby\n";
 	
 }
 
@@ -388,8 +391,8 @@ my $outfiledpfig1=$outfile;
 
 #size by bhp, color by z
 $outfiledpfig1=~s/\.\w+$/_z_bhp_dotplot.png/;
-system("$rscript $gs_dotplot --size $outfile4 --sizename \"'-Log10BHP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig1 --top $topnum --sortby $sortby");
-print LOG "$rscript $gs_dotplot --size $outfile4 --sizename \"'-Log10BHP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig1 --top $topnum --sortby $sortby\n";
+system("$gs_dotplot --size $outfile4 --sizename \"'-Log10BHP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig1 --top $topnum --sortby $sortby");
+print LOG "$gs_dotplot --size $outfile4 --sizename \"'-Log10BHP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig1 --top $topnum --sortby $sortby\n";
 
 
 my $outfiledpfig2=$outfile;
@@ -402,8 +405,8 @@ my $outfiledpfig2=$outfile;
 
 #size by bhp, color by z
 $outfiledpfig2=~s/\.\w+$/_z_rawp_dotplot.png/;
-system("$rscript $gs_dotplot --size $outfile5 --sizename \"'-Log10RawP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig2 --top $topnum --sortby $sortby");
-print LOG "$rscript $gs_dotplot --size $outfile5 --sizename \"'-Log10RawP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig2 --top $topnum --sortby $sortby\n";
+system("$gs_dotplot --size $outfile5 --sizename \"'-Log10RawP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig2 --top $topnum --sortby $sortby");
+print LOG "$gs_dotplot --size $outfile5 --sizename \"'-Log10RawP'\" --color $outfile6 --colorname Zscore -o $outfiledpfig2 --top $topnum --sortby $sortby\n";
 
 
 close LOG;

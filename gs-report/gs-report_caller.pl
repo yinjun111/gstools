@@ -161,6 +161,11 @@ my $outputfoldername = basename($outputfolder);
 
 $inputfile = abs_path($inputfile);
 
+if(defined $bkfile && length($bkfile)>0) {
+	$bkfile=abs_path($bkfile);
+}
+
+
 my $scriptlocalrun="$outputfolder/gs-report_local_submission.sh";
 my $scriptclusterrun="$outputfolder/gs-report_cluster_submission.sh";
 
