@@ -117,7 +117,8 @@ if($dev) {
 
 my $gs_fisher="perl $gstoolsfolder/gs-fisher/gs-fisher_caller.pl";
 my $gs_fisher_summary="perl $gstoolsfolder/gs-fisher/gs-fisher_summary.pl";
-my $gs_heatmap="$gstoolsfolder/plots/gs_heatmap.R"; #changed here
+
+my $gs_heatmap="$rscript $gstoolsfolder/plots/gs_heatmap.R"; #changed here
 
 
 ######
@@ -405,8 +406,8 @@ foreach my $outfile (@outfiles) {
 	print STDERR "Generating heatmap for $outfile.\n";
 	print LOG "Generating heatmap for $outfile.\n";
 
-	system("$rscript $gs_heatmap -i $outfile -o $outfilefig");
-	print LOG "$rscript $gs_heatmap -i $outfile -o $outfilefig\n";
+	system("$gs_heatmap -i $outfile -o $outfilefig");
+	print LOG "$gs_heatmap -i $outfile -o $outfilefig\n";
 	
 }
 

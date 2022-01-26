@@ -102,7 +102,7 @@ if($dev) {
 	#$omictoolsfolder=get_parent_folder(abs_path(dirname($0)));
 }
 
-my $mergefiles="$omictoolsfolder/mergefiles/mergefiles_caller.pl";
+my $mergefiles="perl $omictoolsfolder/mergefiles/mergefiles_caller.pl";
 my $text2excel="perl $omictoolsfolder/text2excel/text2excel.pl";
 
 
@@ -118,8 +118,8 @@ if($dev) {
 	#$omictoolsfolder=get_parent_folder(abs_path(dirname($0)));
 }
 
-my $gs_heatmap="$gstoolsfolder/gs_heatmap.R";
-my $gs_dotplot="$gstoolsfolder/gs_dotplot.R";
+my $gs_fisher="perl $gstoolsfolder/gs-fisher/gs-fisher_caller.pl";
+my $gs_fisher_summary="perl $gstoolsfolder/gs-fisher/gs-fisher_summary.pl";
 
 
 ########

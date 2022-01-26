@@ -350,17 +350,17 @@ open(S1,">$scriptfile1") || die $!;
 foreach my $dbfile (sort keys %dbfiles) {
 	#both
 	if(defined $bkfile && length($bkfile)>0) {
-		print S1 "perl $gs_fisher -i $newsigfile -b $bkfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile --top $topnum --qcutoff $qcutoff -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
+		print S1 "$gs_fisher -i $newsigfile -b $bkfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile --top $topnum --qcutoff $qcutoff -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");
 	}
 	else {
-		print S1 "perl $gs_fisher -i $newsigfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile --top $topnum --qcutoff $qcutoff -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");	
+		print S1 "$gs_fisher -i $newsigfile -t matrix -c both -o $outputfolder/$dbfiles{$dbfile} -d $dbfile --top $topnum --qcutoff $qcutoff -a ",$tx2ref{$tx}{"geneanno"},print_dev($dev,";");	
 	}
 	
 	if(@selcomparisons) {
-		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --comparisons $comparisons --top $topnum --sortby $sortby",print_dev($dev,";\n");
+		print S1 "$gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --comparisons $comparisons --top $topnum --sortby $sortby",print_dev($dev,";\n");
 	}
 	else {
-		print S1 "perl $gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --comparisons ",join(",",@usedcomparisons)," --top $topnum --sortby $sortby",print_dev($dev,";\n");
+		print S1 "$gs_fisher_summary -i $outputfolder/$dbfiles{$dbfile} -o $outputfolder/$dbfiles{$dbfile}_summary --comparisons ",join(",",@usedcomparisons)," --top $topnum --sortby $sortby",print_dev($dev,";\n");
 	}
 }
 close S1;
