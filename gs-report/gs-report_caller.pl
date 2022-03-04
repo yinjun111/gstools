@@ -14,13 +14,14 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.3";
+my $version="0.31";
 
 #v0.2, changed to matrix input
 #v0.21, keep original order in input
 #v0.22, add background file
 #v0.23, add rat anno
 #v0.3, new 2x2 cont table
+#v0.31, error message for no input comps
 
 my $usage="
 
@@ -323,6 +324,12 @@ else {
 		}
 	}
 	close IN;
+	
+	if(@usedcomparisons==0) {
+		print STDERR "ERROR: No comparisons found in $inputfile. Exit!";
+		print LOG "ERROR: No comparisons found in $inputfile. Exit!";
+		exit;
+	}
 	
 	print STDERR "No --comparisons defined. Use existing order: ",join(",",@usedcomparisons),"\n";
 	print LOG "No --comparisons defined. Use existing order: ",join(",",@usedcomparisons),"\n";

@@ -11,10 +11,10 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.2";
+my $version="0.21";
 
 #v0.2, change default dotplot to z+p/q
-
+#v0.21, now create empty values for not detected comparisons
 
 my $usage="
 
@@ -249,9 +249,13 @@ my @usedcomparisons;
 if(@selcomparisons) {
 	foreach my $comp (@selcomparisons) {
 		unless(defined $file2gs{$comp}) {
-			print STDERR "ERROR:$comp was not found in --in $infolders.\n";
-			print LOG "ERROR:$comp was not found in --in $infolders.\n";
-			exit;
+			#print STDERR "ERROR:$comp was not found in --in $infolders.\n";
+			#print LOG "ERROR:$comp was not found in --in $infolders.\n";
+			#exit;
+			
+			#now create empty values for no fs scores
+			print STDERR "$comp was not found in --in $infolders.\n";
+			print LOG "$comp was not found in --in $infolders.\n";
 		}
 	}
 	@usedcomparisons=@selcomparisons;
