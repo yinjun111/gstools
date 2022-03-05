@@ -16,12 +16,13 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.21";
+my $version="0.22";
 
 #v1.0a, perform GSEA analysis after cls and gct are generated.
 #v1.1 versioning
 #v0.2, AWS
 #v0.21, some updates to fit gstools
+#v0.22, correct GO names
 
 my $usage="
 gseagen
@@ -50,10 +51,10 @@ Parameters:
 	--db|-d           MSigDB database to be used
                        Recommended:
                         h.all.v7.4
-                        c5.bp.v7.4
+                        c5.go.bp.v7.4
 						
                        Others include: 
-                       c1.all.v7.4,c2.all.v7.4,c2.cgp.v7.4,c2.cp.biocarta.v7.4,c2.cp.kegg.v7.4,c2.cp.pid.v7.4,c2.cp.reactome.v7.4,c2.cp.v7.4,c3.all.v7.4,c3.mir.mirdb.v7.4,c3.mir.mir_legacy.v7.4,c3.mir.v7.4,c3.tft.gtrd.v7.4,c3.tft.tft_legacy.v7.4,c3.tft.v7.4,c4.all.v7.4,c4.cgn.v7.4,c4.cm.v7.4,c5.all.v7.4,c5.bp.v7.4,c5.cc.v7.4,c5.mf.v7.4,c6.all.v7.4,c7.all.v7.4,h.all.v7.4
+                       c1.all.v7.4,c2.all.v7.4,c2.cgp.v7.4,c2.cp.biocarta.v7.4,c2.cp.kegg.v7.4,c2.cp.pid.v7.4,c2.cp.reactome.v7.4,c2.cp.v7.4,c3.all.v7.4,c3.mir.mirdb.v7.4,c3.mir.mir_legacy.v7.4,c3.mir.v7.4,c3.tft.gtrd.v7.4,c3.tft.tft_legacy.v7.4,c3.tft.v7.4,c4.all.v7.4,c4.cgn.v7.4,c4.cm.v7.4,c5.all.v7.4,c5.go.bp.v7.4,c5.go.cc.v7.4,c5.go.mf.v7.4,c6.all.v7.4,c7.all.v7.4,h.all.v7.4
 
     --runmode|-r      Where to run the scripts, local, cluster or none [none]
                                   none, only prints scripts
