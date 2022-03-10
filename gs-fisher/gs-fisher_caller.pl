@@ -22,7 +22,7 @@ my $version="0.8";
 #v0.6, add zscore calculation
 #v0.7, add barplot
 #v0.8, redefined N (bk)
-
+#v0.81, fixed barplot bug
 
 my $usage="
 
@@ -150,7 +150,7 @@ if($dev) {
 	$gstoolsfolder="/home/centos/Pipeline/gstools/";
 }
 
-my $gs_barplot="$gstoolsfolder/gs_barplot.R";
+my $gs_barplot="$gstoolsfolder/plots/gs_barplot.R";
 
 
 ########
