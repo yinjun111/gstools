@@ -25,8 +25,8 @@ Description: Convert significance matrix to gene list format needed by Metascape
 
 
 Mandatory Parameters:
-    --in|-i           Input folder(s)					  
-    --out|-o          Output folder
+    --in|-i           Input file					  
+    --out|-o          Output file
 
     --cate|-c         Category of changes, both or updown [updown]
                         use updown to generate lists for up and down genes separately
