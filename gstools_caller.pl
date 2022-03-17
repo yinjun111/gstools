@@ -4,11 +4,12 @@ use Getopt::Long;
 use File::Basename;
 use Cwd qw(abs_path);
 
-my $version="0.3";
+my $version="0.31";
 
 #v0.1
 #v0.2, added z-score calculation and new dot plot
 #v0.3, changed 2x2 table
+#v0.31, add format conversion tools
 
 my $usage="
 
@@ -30,6 +31,10 @@ Parameters:
     ipa-summary  Summary IPA analysis results
 
     metascape-gen      Generate files for Metascape analysis (not implemented)
+
+    #format conversion tools
+    list2matrix  Convert gene lists by columns to matrix format
+    matrix2ms    Convert matrix format to Metascape format
 
     list-dbs     List current databases for gs-fisher
 
@@ -86,6 +91,10 @@ my $gsea_gen_summary="perl $gstoolsfolder/gsea-gen/gsea-gen-summary.pl";
 
 my $ipa_summary="perl $gstoolsfolder/ipa-gen/ipa_summary.pl";
 
+my $list2matrix="perl $gstoolsfolder/misc/list2matrix.pl";
+my $matrix2ms="perl $gstoolsfolder/misc/matrix2ms.pl";
+
+
 my %commands2program=(
     "gs-report"=>$gs_report,
     "gs-fisher"=>$gs_fisher,
@@ -93,6 +102,8 @@ my %commands2program=(
 	"gsea-gen"=>$gsea_gen,
 	"gsea-gen-summary"=>$gsea_gen_summary,
 	"ipa-summary"=>$ipa_summary,
+	"list2matrix"=>$list2matrix,
+	"matrix2ms"=>$matrix2ms,	
 	"list-dbs"=>$list_dbs,
 );
 

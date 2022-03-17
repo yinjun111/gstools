@@ -98,6 +98,7 @@ my $sampleName="Sample";
 #my $dirGanno;
 my $verbose=0;
 my $groupName;
+my $$nperm=1000;
 
 my $jobs=5;
 my $runmode="none";
@@ -116,6 +117,7 @@ GetOptions(
 	"comparisons|c=s" => \$comparisons,
 	"db|d=s" => \$db,
     "sampleName|r=s" => \$sampleName, #sample column ID used in config file	  
+	"nperm=s"=>\$nperm,
 	"dev" => \$dev,	
 	"runmode|r=s" => \$runmode,	
     "verbose|v" => \$verbose,
@@ -393,9 +395,10 @@ else {
 
 if(defined $comparisons && length($comparisons)>0) {
 	
+	#increase permutation to 10k?
 	open(OUT,">$scriptfile1") || die $!;
 	foreach my $comparison (sort keys %comparisons_all) {
-		print OUT "$gsea_cli -res $gctfile -cls $clsfile#$comparison -gmx $db2file -chip $chipfile -out $outputfolder -collapse Collapse -mode Max_probe -norm meandiv -nperm 1000 -permute phenotype -rnd_type no_balance -scoring_scheme weighted -rpt_label my_analysis -metric Signal2Noise -sort real -order descending  -create_gcts false -create_svgs false -include_only_symbols true -make_sets true -median false -num 100 -plot_top_x 30 -rnd_seed timestamp -save_rnd_lists false -set_max 500 -set_min 10 -zip_report false\n";
+		print OUT "$gsea_cli -res $gctfile -cls $clsfile#$comparison -gmx $db2file -chip $chipfile -out $outputfolder -collapse Collapse -mode Max_probe -norm meandiv -nperm $nperm -permute phenotype -rnd_type no_balance -scoring_scheme weighted -rpt_label my_analysis -metric Signal2Noise -sort real -order descending  -create_gcts false -create_svgs false -include_only_symbols true -make_sets true -median false -num 100 -plot_top_x 30 -rnd_seed timestamp -save_rnd_lists false -set_max 500 -set_min 10 -zip_report false\n";
 	}
 	close OUT;
 

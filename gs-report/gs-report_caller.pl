@@ -14,7 +14,7 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.31";
+my $version="0.32";
 
 #v0.2, changed to matrix input
 #v0.21, keep original order in input
@@ -22,6 +22,7 @@ my $version="0.31";
 #v0.23, add rat anno
 #v0.3, new 2x2 cont table
 #v0.31, error message for no input comps
+#v0.32, first line of input matrix has to be comparisons
 
 my $usage="
 
@@ -276,11 +277,13 @@ my @usedcomparisons;
 if(@selcomparisons) {
 	open(OUT,">$newsigfile") || die $!;
 	open(IN,"$inputfile") || die "ERROR:$inputfile can't be read. $!";
+
+	my $inputlinenum=0; #the first line has to be comparison names
 	while(<IN>) {
 		tr/\r\n//d;
 		my @array=split/\t/;
 		
-		if($_=~/^Gene/) {
+		if($inputlinenum==0) {
 			for(my $num=1;$num<@array;$num++) {
 				$comp2col{$array[$num]}=$num;
 			}
@@ -302,6 +305,8 @@ if(@selcomparisons) {
 			print LOG "Columns ", join(",",@selcols)," are used by --comparisons $comparisons.\n";			
 			
 		}
+		
+		$inputlinenum++;
 		
 		print OUT join("\t",@array[0,@selcols]),"\n";
 	}
