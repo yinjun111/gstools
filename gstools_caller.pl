@@ -30,8 +30,6 @@ Parameters:
     ipa-gen      Generate files for IPA analysis (not implemented)
     ipa-summary  Summary IPA analysis results
 
-    metascape-gen      Generate files for Metascape analysis (not implemented)
-
     #format conversion tools
     list2matrix  Convert gene lists by columns to matrix format
     matrix2ms    Convert matrix format to Metascape format
