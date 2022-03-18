@@ -51,7 +51,7 @@ my $params=join(" ",@ARGV);
 	
 my $infile;
 my $outfile;
-my $cateopt;
+my $cateopt="updown";
 
 GetOptions(
 	"in|i=s" => \$infile,
