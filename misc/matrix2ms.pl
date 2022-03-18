@@ -31,7 +31,9 @@ Mandatory Parameters:
     --cate|-c         Category of changes, both or updown [updown]
                         use updown to generate lists for up and down genes separately
                         use both to generate lists for up and down genes together
-	
+
+    --background|-b   Whether to use all genes from the matrix as background [T]
+						
 ";
 
 
@@ -52,11 +54,13 @@ my $params=join(" ",@ARGV);
 my $infile;
 my $outfile;
 my $cateopt="updown";
+my $background="T";
 
 GetOptions(
 	"in|i=s" => \$infile,
 	"out|o=s"=>\$outfile,
 	"cate|c=s"=>\$cateopt,
+	"background|b=s"=>\$background,
 );
 
 
@@ -101,6 +105,8 @@ while(<IN>) {
 				}
 			}
 		}
+		
+		$genes{$array[0]}++;
 	}
 		
 	$linenum++;
@@ -112,6 +118,11 @@ open(OUT,">$outfile") || die $!;
 foreach my $cate (sort keys %cate2gene) {
 	print OUT $cate,"\t";
 	print OUT join(",",sort keys %{$cate2gene{$cate}}),"\n";
+}
+
+#print background
+if($background eq "T") {
+	print OUT "_BACKGROUND\t",join(",",sort keys %genes),"\n";
 }
 
 close OUT;
