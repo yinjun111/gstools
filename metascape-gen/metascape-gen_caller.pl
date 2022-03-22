@@ -17,9 +17,9 @@ my $version="0.2";
 
 my $usage="
 
-gstools matrix2ms
+gstools metascape-gen
 version: $version
-Usage: gstools matrix2ms [parameters]
+Usage: gstools metascape-gen [parameters]
 
 Description: Convert significance matrix to gene list format needed by Metascape, e.g. first column as experiment name, 2nd col as genes separated by ,
 
@@ -28,11 +28,11 @@ Mandatory Parameters:
     --in|-i           Input file					  
     --out|-o          Output file
 
-    --cate|-c         Category of changes, both or updown [updown,both]
+    --cate|-c         Category of changes, both or updown [updown]
                         use updown to generate lists for up and down genes separately
                         use both to generate lists for up and down genes together
 
-    --background|-b   Whether to use all genes from the matrix as background [F]
+    --background|-b   Whether to use all genes from the matrix as background [T]
 						
 ";
 
