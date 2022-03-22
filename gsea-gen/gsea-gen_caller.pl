@@ -98,7 +98,7 @@ my $sampleName="Sample";
 #my $dirGanno;
 my $verbose=0;
 my $groupName;
-my $$nperm=1000;
+my $nperm=1000;
 
 my $jobs=5;
 my $runmode="none";
