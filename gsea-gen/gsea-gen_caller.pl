@@ -147,7 +147,8 @@ if($dev) {
 
 
 my $parallel_job="perl $omictoolsfolder/parallel-job/parallel-job_caller.pl"; 
-my $gsea_cli="/apps/GSEA_Linux_4.0.3/gsea-cli.sh GSEA";
+#my $gsea_cli="/apps/GSEA_Linux_4.0.3/gsea-cli.sh GSEA";
+my $gsea_cli="/apps/GSEA_Linux_4.2.3/gsea-cli.sh GSEA";
 
 #gstools
 my $gstoolsfolder="/apps/gstools/";
