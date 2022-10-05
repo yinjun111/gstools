@@ -130,7 +130,7 @@ figure1<-args$out
 CairoPNG(file=figure1,res = 300,width = 2+floor(max(nchar(rownames(data.color.top))/10))+ncol(data.color)*0.2,height = 3+0.4*topnum,units = "in")
 
 #plot1<-ggplot(data.df, aes_string(x="Comparison", y="`Gene Set`" , size=sizename.rev, color=colorname)) + geom_point(alpha = 1)+theme_classic() +scale_color_gradient2(low = "blue",  mid="grey",high = "red", space = "Lab", limit = c(0, max(data.df[[colorname]])))+scale_size(range = c(0, 10))+ theme(axis.text.x = element_text(angle = 90,size = 10 ),axis.text.y = element_text(angle = 0,size = 10 ))
-plot1<-ggplot(data.df, aes_string(x="Comparison", y="`Gene Set`" , size=sizename.rev, color=colorname)) + geom_point(alpha = 1)+theme_classic() +scale_color_gradient2(low = "blue",  mid="grey",high = "red", space = "Lab", limit = c(-4, 4),oob=squish)+scale_size(range = c(0, 10))+ theme(axis.text.x = element_text(angle = 90,size = 10 ),axis.text.y = element_text(angle = 0,size = 10 ))
+plot1<-ggplot(data.df, aes_string(x="Comparison", y="`Gene Set`" , size=sizename.rev, color=colorname)) + geom_point(alpha = 1)+theme_classic() +scale_color_gradient2(low = "#0571b0",  mid="grey",high = "#ca0020", space = "Lab", limit = c(-4, 4),oob=squish)+scale_size(range = c(0, 10))+ theme(axis.text.x = element_text(angle = 90,size = 10 ),axis.text.y = element_text(angle = 0,size = 10 ))
 
 print(plot1)
 
