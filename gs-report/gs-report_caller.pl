@@ -462,7 +462,7 @@ elsif($runmode eq "cluster") {
 	system("sh $scriptclusterrun");
 	print LOG "sh $scriptclusterrun;\n\n";
 
-	print STDERR "Starting cluster paralleled processing using $jobnumber tasks. To monitor process, use \"qstat\".\n\n";
+	print STDERR "Starting cluster paralleled processing using $jobnumber tasks. To monitor process, use \"squeue\".\n\n";
 
 }
 

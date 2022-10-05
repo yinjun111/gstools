@@ -77,23 +77,31 @@ topnum.q=max(min(topnum,sum(data.q>-log10(siglevel))),5)
 #####
 
 gs_bar<-function(z,p,gs,zname,pname,signame="p",siglevel=0.05) {
-
-	#create data frame
-	
-	gs<-make.names(gs,unique=T)
-	
-	data.df<-data.frame(factor(gs,levels=rev(gs)),		
-                    as.numeric(unlist(z)),
-                    as.numeric(unlist(p)))
-
-	colnames(data.df)<-c("Gene Set",zname, pname)			  
-
-	zname.rev<-paste("`",zname,"`",sep="")
-	pname.rev<-paste("`",pname,"`",sep="")
-
-	plot1<-ggplot(data.df, aes_string(x="`Gene Set`", y=pname.rev, fill=zname.rev)) + geom_bar(stat='identity')+theme_classic() +scale_fill_gradient2(low = "blue",  mid="grey",high = "red", space = "Lab", limit = c(-4, 4),oob=squish) + coord_flip()+geom_hline(yintercept = -log10(siglevel), linetype="dashed",color="black") + annotate(geom="text", x=1, y=-log10(0.05), label=paste(signame,"<",siglevel,sep=""),color="black",size=4,hjust = 0) +theme(axis.text.x = element_text(angle = 0,size = 12 ),axis.text.y = element_text(angle = 0,size = 12 ))
-                                           
-	print(plot1)  
+  
+  #create data frame
+  
+  gs<-make.names(gs,unique=T)
+  
+  data.df<-data.frame(factor(gs,levels=rev(gs)),		
+                      as.numeric(unlist(z)),
+                      as.numeric(unlist(p)))
+  
+  colnames(data.df)<-c("Gene Set",zname, pname)			  
+  
+  zname.rev<-paste("`",zname,"`",sep="")
+  pname.rev<-paste("`",pname,"`",sep="")
+  
+  plot1<-ggplot(data.df, aes_string(x="`Gene Set`", y=pname.rev, fill=zname.rev)) + 
+    geom_bar(stat='identity',width=0.9)+
+    theme_classic() +
+    scale_fill_gradient2(low = "#0571b0",  mid="grey",high = "#ca0020", space = "Lab", limit = c(-4, 4),oob=squish) + 
+    coord_flip()+
+    geom_hline(yintercept = -log10(siglevel), linetype="dashed",color="black") + 
+    annotate(geom="text", x=1, y=-log10(0.05), label=paste(signame,"<",siglevel,sep=""),color="black",size=4,hjust = 0) +
+    theme(axis.text.x = element_text(angle = 0,size = 12 ),axis.text.y = element_text(angle = 0,size = 12 ))
+  #panel.border = element_rect(colour = "black", fill=NA, size=1)
+  
+  print(plot1)  
 }
 
 #figure output, qvalue
