@@ -597,16 +597,16 @@ foreach my $exp_id (@final_comparison_names) {
 	##unlink($tempfile); #masked for test
 	
 	#plto bar plot. Top 20 and All sigs
-	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum_barplot.png --top $topnum --siglevel $qcutoff");
-	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum_barplot.png --top $topnum --siglevel $qcutoff\n";
+	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum\_barplot.png --top $topnum --siglevel $qcutoff");
+	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum\_barplot.png --top $topnum --siglevel $qcutoff\n";
 
 	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all_barplot.png --top all --siglevel $qcutoff");
 	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all_barplot.png --top all --siglevel $qcutoff\n";
 	
 	#plto bar plot. Top 20 and All sigs
-	system("$rscript $gs_waterfallplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum_waterfallplot.png --top $topnum --siglevel $qcutoff");
+	system("$rscript $gs_waterfallplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum\_waterfallplot.png --top $topnum --siglevel $qcutoff");
 	
-	print LOG "$rscript $gs_waterfallplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum_waterfallplot.png --top $topnum --siglevel $qcutoff\n";
+	print LOG "$rscript $gs_waterfallplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum\_waterfallplot.png --top $topnum --siglevel $qcutoff\n";
 
 	system("$rscript $gs_waterfallplot -i $file_out -o $outfolder/$newid\_gs-fisher_all_waterfallplot.png --top all --siglevel $qcutoff");
 	
