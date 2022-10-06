@@ -134,6 +134,6 @@ cat("Generating ",figure1,"\n")
 
 CairoPNG(file=figure1,res = 300,width = 3.5+floor(max(nchar(data.names.sel)/10)),height = topnum*0.3,units = "in")
 
-gs_waterfall(z=data.z.order.sel,p=data.q.sign.order.sel,gs=data.names.sel,zname="ZScore",pname="-Log10BHP by Z",siglevel=siglevel,signame="BHP")
+gs_waterfall(z=data.z.order.sel,p=data.q.sign.order.sel,gs=data.names.sel,zname="ZScore",pname="-Log10BHP, by ZScore sign",siglevel=siglevel,signame="BHP")
 
 dev.off()
