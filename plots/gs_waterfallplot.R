@@ -118,7 +118,7 @@ gs_waterfall<-function(z,p,gs,zname,pname,signame="p",siglevel=0.05) {
     #geom_hline(yintercept = -log10(siglevel), linetype="dashed",color="black") + 
     geom_segment(aes(y=log10(0.05),x=sum(p>0)+0.5,yend=log10(0.05),xend=0), linetype="dashed",color="black",size=0.3)+
     geom_segment(aes(y=-log10(0.05),x=sum(p>0)+0.5,yend=-log10(0.05),xend=length(p)+0.5), linetype="dashed",color="black",size=0.3)+
-    annotate(geom="text", x=1, y=-0.6, label=paste(signame,"<",siglevel,sep=""),color="black",size=4,hjust = 0) +
+    annotate(geom="text", x=1, y=0, label=paste(signame,"<",siglevel,sep=""),color="black",size=3,hjust = 0) +
     theme(axis.text.x = element_text(angle = 0,size = 12 ),axis.text.y = element_text(angle = 0,size = 12 ))
   #panel.border = element_rect(colour = "black", fill=NA, size=1)
   
