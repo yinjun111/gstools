@@ -131,7 +131,7 @@ my $omictoolsfolder="/apps/omictools/";
 
 #adding --dev switch for better development process
 if($dev) {
-	$omictoolsfolder="/home/centos/Pipeline/omictools/";
+	$omictoolsfolder="/home/jyin/Pipeline/omictools/";
 #}
 #else {
 	#the tools called will be within the same folder of the script
@@ -147,11 +147,11 @@ my $gstoolsfolder="/apps/gstools/";
 
 #adding --dev switch for better development process
 if($dev) {
-	$gstoolsfolder="/home/centos/Pipeline/gstools/";
+	$gstoolsfolder="/home/jyin/Pipeline/gstools/";
 }
 
 my $gs_barplot="$gstoolsfolder/plots/gs_barplot.R";
-
+my $gs_waterfallplot="$gstoolsfolder/plots/gs_waterfallplot.R";
 
 ########
 #Program running
@@ -597,11 +597,20 @@ foreach my $exp_id (@final_comparison_names) {
 	##unlink($tempfile); #masked for test
 	
 	#plto bar plot. Top 20 and All sigs
-	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top20.png --top $topnum --siglevel $qcutoff");
-	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top20.png --top $topnum --siglevel $qcutoff\n";
+	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum_barplot.png --top $topnum --siglevel $qcutoff");
+	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum_barplot.png --top $topnum --siglevel $qcutoff\n";
 
-	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all.png --top all --siglevel $qcutoff");
-	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all.png --top all --siglevel $qcutoff\n";
+	system("$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all_barplot.png --top all --siglevel $qcutoff");
+	print LOG "$rscript $gs_barplot -i $file_out -o $outfolder/$newid\_gs-fisher_all_barplot.png --top all --siglevel $qcutoff\n";
+	
+	#plto bar plot. Top 20 and All sigs
+	system("$rscript $gs_waterfallplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum_waterfallplot.png --top $topnum --siglevel $qcutoff");
+	
+	print LOG "$rscript $gs_waterfallplot -i $file_out -o $outfolder/$newid\_gs-fisher_top$topnum_waterfallplot.png --top $topnum --siglevel $qcutoff\n";
+
+	system("$rscript $gs_waterfallplot -i $file_out -o $outfolder/$newid\_gs-fisher_all_waterfallplot.png --top all --siglevel $qcutoff");
+	
+	print LOG "$rscript $gs_waterfallplot -i $file_out -o $outfolder/$newid\_gs-fisher_all_waterfallplot.png --top all --siglevel $qcutoff\n";
 }
 
 
