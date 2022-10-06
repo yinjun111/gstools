@@ -14,7 +14,7 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.32";
+my $version="0.4";
 
 #v0.2, changed to matrix input
 #v0.21, keep original order in input
@@ -23,6 +23,8 @@ my $version="0.32";
 #v0.3, new 2x2 cont table
 #v0.31, error message for no input comps
 #v0.32, first line of input matrix has to be comparisons
+#v0.4, add waterfall, change default colors
+
 
 my $usage="
 
@@ -146,7 +148,7 @@ my $gstoolsfolder="/apps/gstools/";
 
 #adding --dev switch for better development process
 if($dev) {
-	$gstoolsfolder="/home/centos/Pipeline/gstools/";
+	$gstoolsfolder="/home/jyin/Pipeline/gstools/";
 }
 
 my $gs_fisher="perl $gstoolsfolder/gs-fisher/gs-fisher_caller.pl";
