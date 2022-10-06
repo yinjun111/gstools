@@ -11,10 +11,12 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.21";
+my $version="0.22";
 
 #v0.2, change default dotplot to z+p/q
 #v0.21, now create empty values for not detected comparisons
+#v0.22, replace centos to jyin
+
 
 my $usage="
 
@@ -95,7 +97,7 @@ my $omictoolsfolder="/apps/omictools/";
 
 #adding --dev switch for better development process
 if($dev) {
-	$omictoolsfolder="/home/centos/Pipeline/omictools/";
+	$omictoolsfolder="/home/jyin/Pipeline/omictools/";
 #}
 #else {
 	#the tools called will be within the same folder of the script
@@ -111,7 +113,7 @@ my $gstoolsfolder="/apps/gstools/";
 
 #adding --dev switch for better development process
 if($dev) {
-	$gstoolsfolder="/home/centos/Pipeline/gstools/";
+	$gstoolsfolder="/home/jyin/Pipeline/gstools/";
 #}
 #else {
 	#the tools called will be within the same folder of the script
