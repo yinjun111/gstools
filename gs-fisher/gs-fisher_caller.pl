@@ -12,7 +12,7 @@ use File::Basename qw(basename dirname);
 ########
 
 
-my $version="0.8";
+my $version="0.9";
 
 #v0.2, add --type to accept different input types
 #v0.3, add excel output
@@ -23,6 +23,8 @@ my $version="0.8";
 #v0.7, add barplot
 #v0.8, redefined N (bk)
 #v0.81, fixed barplot bug
+#v0.9, add waterfall plot
+
 
 my $usage="
 

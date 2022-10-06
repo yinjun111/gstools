@@ -2,9 +2,9 @@
 
 library("argparser",quietly =T)
 
-version="0.1"
+version="0.2"
 
-#
+#v0.2, change colors
 
 description=paste0("gs_barplot\nversion ",version,"\n","Usage:\nDescription: Generate dot image two data matrixes\n")
 
