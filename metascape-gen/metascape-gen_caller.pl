@@ -24,8 +24,9 @@ use File::Basename qw(basename);
 ########
 
 
-my $version="0.3";
+my $version="0.31";
 
+#v0.31, add default up/down color
 
 my $usage="
 
@@ -163,14 +164,14 @@ foreach my $comp (@comps) {
 		print OUT $comp,"-Up\t",join(",",sort keys %{$comp2gene{$comp}{"up"}}),"\n";
 		
 		#output for each exp
-		print OUT_EXP $comp,"-Up\t",join(",",sort keys %{$comp2gene{$comp}{"up"}}),"\n";
+		print OUT_EXP $comp,"-Up[c=#e41a1c]\t",join(",",sort keys %{$comp2gene{$comp}{"up"}}),"\n";
 	}
 	
 	if(defined $comp2gene{$comp}{"down"}) {
 		print OUT $comp,"-Down\t",join(",",sort keys %{$comp2gene{$comp}{"down"}}),"\n";
 
 		#output for each exp
-		print OUT_EXP $comp,"-Down\t",join(",",sort keys %{$comp2gene{$comp}{"down"}}),"\n";
+		print OUT_EXP $comp,"-Down[c=#377eb8]\t",join(",",sort keys %{$comp2gene{$comp}{"down"}}),"\n";
 	}
 	
 	print OUT_EXP "_BACKGROUND\t",join(",",sort keys %allgenes),"\n";
