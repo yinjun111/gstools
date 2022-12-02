@@ -124,7 +124,7 @@ if(defined $commands2program{$command}) {
 	}
 	else {
 		if($command=~/gs-kegg/) {
-			system($commands2program{$command}." --help";
+			system($commands2program{$command}." --help");
 		}
 		else {
 			system($commands2program{$command}." ".join(" ",@params));
