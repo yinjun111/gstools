@@ -1,6 +1,6 @@
 library("argparser",quietly =T)
 
-version="0.6"
+version="0.7"
 
 # v0.1: pathview function
 # v0.2: TST genelist, Log2FC limit
@@ -9,6 +9,7 @@ version="0.6"
 # v0.5: Geneanno not required
 # v0.6: --defile is now --in, GeneDE input, --fccol, updated name gen, out folder creation
 # v0.6: Gstools --gs, --top, KEGG reference file, --showname, --pathwayname search
+# v0.7: New KEGG pathway list, updated --pathwayname search and --showname output
 
 description=paste0("gs_keggpathview\nversion ",version,"\n","Usage:\nDescription: Generate KEGG pathway images for DE data.\n")
 
@@ -38,13 +39,8 @@ args = parse_args(parser)
 # -----------------
 # Kegg Reference
 # -----------------
-# Comment out unused path
-
 # Pcluster Slurm
-kegg.ref.path <- "/data/cbadger/PathwayMaps/KEGG/Reference/KEGG_gstools_pathway_ids.txt"
-
-# RStudio Workbench (Testing)
-#kegg.ref.path <- "/data/cbadger/RStudio/FRI/PathwayMaps/Kegg/Reference/KEGG_gstools_pathway_ids.txt"
+kegg.path <- "/data/jyin/Databases/gstools-db/KEGG/kegg.pathwaylist.2022.10.28.txt"
 
 # --------------
 # Requirements
@@ -123,7 +119,7 @@ if (is.na(args$"out")) {
 }
 
 # Species Code Requirement
-species <- ""
+# Kegg Reference Paths
 if (is.na(args$"tx")) {
   stop("Need to specify a species transcriptome with --tx")
 } else if (args$tx == "Human.B38.Ensembl88") {
@@ -243,7 +239,7 @@ names(data.fc) <- rownames(data)
 # Pathway Assignment
 # -------------------
 # KEGG gs-Annotation to Pathway ID
-kegg.ref <- read.table(kegg.ref.path, header=T, row.names=NULL, sep="\t", quote="", comment.char="", colClasses=c("character"))
+kegg.ref <- read.table(kegg.path, header=T, row.names=NULL, sep="\t", quote="", comment.char="", colClasses=c("character"))
 
 if (!is.na(args$"gs")) {
   print("Using gs-fisher pathways (--gs).")
@@ -280,21 +276,22 @@ if (!is.na(args$"gs")) {
   } else if (!is.na(args$"pathwayname")) {
     # --pathwayname
     print("Searching pathway name(s) (--pathwayname).")
-    pathwaynames <- gsub("-","_",args$"pathwayname")
-    pathwaynames <- gsub("'","",pathwaynames)
-    pathwaynames <- gsub("KEGG_","",pathwaynames)
-    pathwaynames <- gsub("/","_",pathwaynames)
-    pathwaynames <- unique(unlist(strsplit(pathwaynames, split = ",")))
+    # Old code for MSigDB Pathway Names. New names contain commas, so multiple pathway names cannot be searched at the same time.
+    # pathwaynames <- gsub("-","_",args$"pathwayname")
+    # pathwaynames <- gsub("'","",pathwaynames)
+    # pathwaynames <- gsub("KEGG_","",pathwaynames)
+    # pathwaynames <- gsub("/","_",pathwaynames)
+    # pathwaynames <- unique(unlist(strsplit(args$"pathwayname", split = ",")))
     # Exact Matches
-    greppaths <- unlist(lapply(toupper(pathwaynames),grep,kegg.ref[,1],ignore.case = TRUE, value = TRUE))
+    # greppaths <- unlist(lapply(args$"pathwayname",grep,kegg.ref[,1],ignore.case = TRUE, value = TRUE))
     # Pathway IDs
-    pathways <- kegg.ref[kegg.ref[,1] %in% greppaths,2]
+    pathways <- kegg.ref[kegg.ref[,1] %in% args$"pathwayname",2]
     # Pathway ID Names
-    names(pathways) <- kegg.ref[kegg.ref[,1] %in% greppaths,1]
+    names(pathways) <- kegg.ref[kegg.ref[,1] %in% args$"pathwayname",1]
     pathways <- na.omit(pathways)
     
     if (length(pathways)==0) {
-      stop(paste0("Pathway from --pathwayname does not have a corresponding pathway ID, see list of pathway names at ",kegg.ref.path))
+      stop(paste0("Pathway from --pathwayname does not have a corresponding pathway ID, see list of pathway names at ",kegg.path))
     }
   }
 }
@@ -312,7 +309,15 @@ for (pathway in pathways) {
   # Adding Path Name to Outfile Name
   if (args$"showname") {
     pathname <- names(pathways[pathways==pathway])
-    pathname <- gsub("KEGG_", "", pathname, ignore.case = TRUE)
+    # Formatting File Name
+    pathname <- gsub(" - ","__",pathname)
+    pathname <- gsub(" / ","_",pathname)
+    pathname <- gsub("-","_",pathname)
+    pathname <- gsub(" ","_",pathname)
+    pathname <- gsub(",","",pathname)
+    pathname <- gsub("\\(","",pathname)
+    pathname <- gsub("\\)","",pathname)
+    pathname <- substr(pathname, 1,20) # First 20 characters only
     name <- paste0(pathname,".",dename) 
   } else {
     name <- dename
