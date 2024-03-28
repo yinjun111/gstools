@@ -7,7 +7,7 @@ gstools
 version: $version
 Usage: gstools [tool] [parameters]
 
-Parameters:
+Arguments:
 
     gs-report    Automatically generate Gene Set Analyses results for rnaseq-summary
 
